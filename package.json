@@ -1,0 +1,30 @@
+{
+  "name": "investor-agent",
+  "version": "0.1.0",
+  "description": "Hibrit Yatırım Analiz Platformu - BIST, TEFAS, ABD Borsaları",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest",
+    "fetch:isyatirim": "npx tsx packages/api-clients/isyatirim.ts",
+    "fetch:tefas": "npx tsx packages/api-clients/tefas.ts",
+    "analyze": "npx tsx packages/analysis/index.ts"
+  },
+  "keywords": [
+    "bist",
+    "tefas",
+    "stock",
+    "analysis",
+    "trading"
+  ],
+  "author": "Furkan Çakır",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^25.0.10",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
