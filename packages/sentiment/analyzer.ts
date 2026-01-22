@@ -24,6 +24,17 @@ export const TAKIP_EDILEN_HESAPLAR = [
     { handle: 'Finansalpsk', odak: 'temel analiz' },
     { handle: 'yatirimfonlarim', odak: 'fon analizleri' },
     { handle: 'fatihtonguc', odak: 'youtube video' },
+    // Yeni eklenen hesaplar (10 adet)
+    { handle: 'fx_trader__', odak: 'forex + hisse' },
+    { handle: 'serkan_saka_', odak: 'teknik analiz' },
+    { handle: 'omerhankrm', odak: 'detaylı analiz raporları', oncelikli: true },
+    { handle: 'TanerGenek', odak: 'piyasa analizi' },
+    { handle: 'ademayan66', odak: 'hisse analizi' },
+    { handle: 'nurisevgen', odak: 'yatırım stratejileri' },
+    { handle: 'kadirhanozturk', odak: 'borsa analizi' },
+    { handle: 'KptKUTERO', odak: 'teknik analiz' },
+    { handle: 'cembabafinans', odak: 'finans haberleri' },
+    { handle: 'financialfree42', odak: 'finansal özgürlük' },
 ];
 
 /**

@@ -28,6 +28,9 @@ export default function RootLayout({
               <a href="/" className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 text-emerald-400">
                 <span>🏠</span> Dashboard
               </a>
+              <a href="/council" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition">
+                <span>🏛️</span> Grand Council
+              </a>
               <a href="/stocks" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition">
                 <span>📈</span> Hisseler
               </a>
