@@ -1,18 +1,37 @@
-// Aether - Makroekonomik Analiz Sayfası (Güncel)
+'use client';
+
+import { useEffect, useState } from 'react';
+
+// Aether - Makroekonomik Analiz Sayfası (Canlı Veri)
 
 export default function AetherPage() {
-    const data = {
-        regime: 'RISK_ON', // Euphoria'dan Risk On'a revize
-        score: 78,
-        allocation: { equity: 75, bond: 15, gold: 5, cash: 5 },
-        indicators: [
-            { name: 'VIX (Korku Endeksi)', value: '14.2', signal: 'NORMAL', status: 'notr' },
-            { name: 'DXY (Dolar Endeksi)', value: '103.8', signal: 'YÜKSELİŞ', status: 'negatif' },
-            { name: 'Tahvil Faizi (10Y)', value: '4.25%', signal: 'YÜKSEK', status: 'negatif' },
-            { name: 'Enflasyon (TR)', value: '%42', signal: 'YÜKSEK', status: 'negatif' },
-            { name: 'Büyüme Beklentisi', value: '%3.5', signal: 'POZİTİF', status: 'pozitif' },
-        ]
-    };
+    const [data, setData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const res = await fetch('/api/aether');
+                const json = await res.json();
+                if (json.success) {
+                    setData(json.data);
+                }
+            } catch (e) {
+                console.error('Aether fetch error', e);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchData();
+    }, []);
+
+    if (loading) {
+        return <div className="p-8 text-center text-slate-400 animate-pulse">Makro veriler analiz ediliyor (FRED/Mynet)...</div>;
+    }
+
+    if (!data) {
+        return <div className="p-8 text-center text-red-400">Veri yüklenemedi. API bağlantısını kontrol edin.</div>;
+    }
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -58,9 +77,9 @@ export default function AetherPage() {
                 </div>
 
                 <div className="card">
-                    <h3 className="card-header">📊 Makro İndikatörler</h3>
+                    <h3 className="card-header">📊 Makro İndikatörler (Canlı)</h3>
                     <div className="space-y-4">
-                        {data.indicators.map((ind, i) => (
+                        {data.indicators.map((ind: any, i: number) => (
                             <div key={i} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
                                 <div>
                                     <div className="font-medium">{ind.name}</div>
@@ -80,9 +99,9 @@ export default function AetherPage() {
             <div className="card bg-blue-900/10 border-blue-500/30">
                 <h3 className="font-semibold text-blue-400 mb-2">💡 Aether Görüşü</h3>
                 <p className="text-slate-300">
-                    Aether skoru 78 (Risk On). Enflasyon baskısı sürse de büyüme beklentileri hisse senetlerini destekliyor.
-                    Dolar endeksindeki (DXY) yükseliş gelişmekte olan piyasalar için risk oluştursa da BIST tarafında seçici hisse alımları (Stock Picking) önerilir.
-                    Nakit oranı %5 seviyesine çekilerek fırsatlar değerlendirilmeli.
+                    Görünüm FRED verilerine dayanarak otomatik oluşturulmuştur.
+                    Skor: {data.score}/100.
+                    Portföy dağılımı mevcut piyasa rejimine ({data.regime}) göre optimize edilmiştir.
                 </p>
             </div>
         </div>
