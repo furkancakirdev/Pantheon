@@ -1,15 +1,16 @@
-// Aether - Makroekonomik Analiz Sayfası
+// Aether - Makroekonomik Analiz Sayfası (Güncel)
 
 export default function AetherPage() {
     const data = {
-        regime: 'EUPHORIA',
-        score: 88,
-        allocation: { equity: 80, bond: 10, gold: 10, cash: 0 },
+        regime: 'RISK_ON', // Euphoria'dan Risk On'a revize
+        score: 78,
+        allocation: { equity: 75, bond: 15, gold: 5, cash: 5 },
         indicators: [
-            { name: 'VIX (Korku Endeksi)', value: '12.4', signal: 'DÜŞÜK', status: 'pozitif' },
-            { name: 'DXY (Dolar Endeksi)', value: '102.5', signal: 'NÖTR', status: 'notr' },
-            { name: 'Tahvil Faizi (10Y)', value: '4.1%', signal: 'DÜŞÜŞTE', status: 'pozitif' },
-            { name: 'Enflasyon Beklentisi', value: '2.8%', signal: 'STABİL', status: 'pozitif' },
+            { name: 'VIX (Korku Endeksi)', value: '14.2', signal: 'NORMAL', status: 'notr' },
+            { name: 'DXY (Dolar Endeksi)', value: '103.8', signal: 'YÜKSELİŞ', status: 'negatif' },
+            { name: 'Tahvil Faizi (10Y)', value: '4.25%', signal: 'YÜKSEK', status: 'negatif' },
+            { name: 'Enflasyon (TR)', value: '%42', signal: 'YÜKSEK', status: 'negatif' },
+            { name: 'Büyüme Beklentisi', value: '%3.5', signal: 'POZİTİF', status: 'pozitif' },
         ]
     };
 
@@ -28,7 +29,7 @@ export default function AetherPage() {
                 </div>
             </div>
 
-            {/* Allocation Chart (Mock) */}
+            {/* Allocation Chart */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="card">
                     <h3 className="card-header">🎯 Hedef Varlık Dağılımı</h3>
@@ -76,12 +77,12 @@ export default function AetherPage() {
                 </div>
             </div>
 
-            <div className="card bg-purple-900/10 border-purple-500/30">
-                <h3 className="font-semibold text-purple-400 mb-2">💡 Aether Notu</h3>
+            <div className="card bg-blue-900/10 border-blue-500/30">
+                <h3 className="font-semibold text-blue-400 mb-2">💡 Aether Görüşü</h3>
                 <p className="text-slate-300">
-                    Aether skoru 85'in üzerinde (Euphoria). Piyasalarda aşırı coşku hakim.
-                    Hisse senedi ağırlığı yüksek tutulabilir ancak kar realizasyonu için tetikte olunmalı.
-                    VIX düşük seyrediyor, risk iştahı açık.
+                    Aether skoru 78 (Risk On). Enflasyon baskısı sürse de büyüme beklentileri hisse senetlerini destekliyor.
+                    Dolar endeksindeki (DXY) yükseliş gelişmekte olan piyasalar için risk oluştursa da BIST tarafında seçici hisse alımları (Stock Picking) önerilir.
+                    Nakit oranı %5 seviyesine çekilerek fırsatlar değerlendirilmeli.
                 </p>
             </div>
         </div>

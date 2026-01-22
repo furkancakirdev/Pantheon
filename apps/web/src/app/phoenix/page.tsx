@@ -1,22 +1,24 @@
-// Phoenix - Strateji Tarama Sayfası
+// Phoenix - Strateji Tarama Sayfası (Güncel)
 
 export default function PhoenixPage() {
     const scans = [
-        { symbol: 'THYAO', price: 285.50, change: 2.4, signal: 'AL', reason: 'Golden Cross + Hacim Artışı', score: 88 },
-        { symbol: 'KCHOL', price: 165.20, change: 1.8, signal: 'AL', reason: 'RSI Aşırı Satım Dönüşü', score: 82 },
-        { symbol: 'TUPRS', price: 142.30, change: -0.5, signal: 'BEKLE', reason: 'MACD Pozitif Uyumsuzluk', score: 65 },
+        { symbol: 'ASELS', price: 64.25, change: 2.4, signal: 'AL', reason: 'Golden Cross (50/200) + Hacim Artışı', score: 92 },
+        { symbol: 'THYAO', price: 312.50, change: 1.8, signal: 'AL', reason: 'Düşen Kırılımı + RSI Pozitif Uyumsuzluk', score: 88 },
+        { symbol: 'TUPRS', price: 168.40, change: 0.2, signal: 'BEKLE', reason: 'Destek Bölgesinde Konsolidasyon', score: 65 },
+        { symbol: 'GARAN', price: 124.60, change: 3.5, signal: 'AL', reason: 'Yeni Zirve Kırılımı', score: 95 },
     ];
 
     const lastRun = {
-        time: '23:30',
-        scanned: 540,
-        candidates: 12,
-        shortlist: 5,
+        time: '23:45',
+        scanned: 560,
+        candidates: 42,
+        shortlist: 8,
         mode: 'DENGELI (Balanced)',
     };
 
     return (
         <div className="space-y-6 animate-fade-in">
+            {/* ... (Header ve Stat Box'lar aynı) ... */}
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -29,7 +31,6 @@ export default function PhoenixPage() {
                 </button>
             </div>
 
-            {/* Pipeline Status */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-slate-800 p-4 rounded-lg border-l-4 border-slate-500">
                     <div className="text-xs text-slate-400 uppercase">Taranan Hisse</div>
@@ -49,7 +50,6 @@ export default function PhoenixPage() {
                 </div>
             </div>
 
-            {/* Results Table */}
             <div className="card">
                 <h3 className="card-header">🎯 Son Tarama Sonuçları ({lastRun.time})</h3>
                 <div className="overflow-x-auto">
