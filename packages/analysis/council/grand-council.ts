@@ -1,19 +1,20 @@
 /**
- * Grand Council - Argus Terminal'den İlham Alınmış Oylama Sistemi
+ * Grand Council - Argus Terminal Entegrasyonu (V2)
+ * 7 Modüllü Oylama Sistemi
  * 
- * Tüm analiz modüllerinin oylama ile karar vermesi:
- * - Orion (Teknik Analiz) -> Kıvanç İndikatörleri
- * - Atlas (Temel Analiz) -> Yaşar Erdinç Kuralları
- * - Aether (Makro) -> (gelecekte)
- * - Hermes (Sentiment) -> Sentiment Analizi
- * - Athena (Faktör) -> Ali Perşembe Teknikleri
- * - Demeter (Sektör) -> Wonderkid Sektör Analizi
+ * Modüller:
+ * 1. Atlas V2 (Temel - Dinamik): Yaşar Erdinç
+ * 2. Demeter (Sektör): Wonderkid
+ * 3. Orion V3 (Teknik): Kıvanç İndikatörleri + Trend
+ * 4. Athena (Faktör): Ali Perşembe
+ * 5. Hermes (Sentiment): X/Twitter Analizi
+ * 6. Aether (Makro): Piyasa Rejimi
+ * 7. Phoenix (Strateji): Otomatik Sinyal
  */
 
-import type { ErdincScore } from '../erdinc/rules.js';
-import type { WonderkidScore } from '../wonderkid/engine.js';
-import type { PersembeAnaliz } from '../persembe/technical.js';
-import type { IndicatorResult, Signal } from '../kivanc/indicators.js';
+import { WonderkidScore } from '../wonderkid/engine.js';
+import { OrionScoreResult } from '../orion/engine.js';
+import { AtlasResult } from '../atlas/engine.js';
 
 /**
  * Modül oyları
@@ -44,147 +45,105 @@ export interface CouncilKarar {
     tarih: Date;
 }
 
-/**
- * Erdinç skorundan oy üret
- */
-export function erdincOyu(skor: ErdincScore): ModulOyu {
-    let oy: OyTipi = 'BEKLE';
-    let guven = skor.toplamSkor;
+// === ADAPTÖRLER ===
 
-    if (skor.toplamSkor >= 75) {
-        oy = 'AL';
-        guven = Math.min(100, skor.toplamSkor + 10);
-    } else if (skor.toplamSkor <= 40) {
-        oy = 'SAT';
-        guven = 100 - skor.toplamSkor;
-    }
+// 1. Atlas V2 (Temel)
+export function atlasOyu(analiz: AtlasResult): ModulOyu {
+    let oy: OyTipi = 'BEKLE';
+    if (analiz.verdict === 'UCUZ') oy = 'AL';
+    else if (analiz.verdict === 'PAHALI') oy = 'SAT';
 
     return {
-        modul: 'Atlas (Temel Analiz - Erdinç)',
+        modul: 'Atlas V2 (Dinamik Temel)',
         oy,
-        guven,
-        aciklama: `Erdinç skoru: ${skor.toplamSkor}/100. ${skor.gerekceler.slice(0, 2).join(', ')}`,
+        guven: analiz.score,
+        aciklama: `${analiz.verdict}. F/K: ${analiz.dynamicFK?.toFixed(2) || 'N/A'}. ${analiz.details[0] || ''}`,
     };
 }
 
-/**
- * Wonderkid skorundan oy üret
- */
+// 2. Demeter (Wonderkid - Sektör)
 export function wonderkidOyu(skor: WonderkidScore): ModulOyu {
     let oy: OyTipi = 'BEKLE';
     let guven = skor.wonderkidSkor;
 
-    if (skor.potansiyelYildiz) {
-        oy = 'AL';
-        guven = Math.min(100, skor.wonderkidSkor + 15);
-    } else if (skor.wonderkidSkor >= 60) {
-        oy = 'AL';
-    } else if (skor.wonderkidSkor <= 30) {
-        oy = 'SAT';
-        guven = 100 - skor.wonderkidSkor;
-    }
+    if (skor.potansiyelYildiz || skor.wonderkidSkor >= 60) oy = 'AL';
+    else if (skor.wonderkidSkor <= 30) oy = 'SAT';
 
     return {
-        modul: 'Demeter (Sektör Rotasyonu - Wonderkid)',
+        modul: 'Demeter (Sektör - Wonderkid)',
         oy,
         guven,
-        aciklama: `Wonderkid skoru: ${skor.wonderkidSkor}/100. Trendler: ${skor.trendEslesmesi.join(', ')}`,
+        aciklama: `Skor: ${skor.wonderkidSkor}. Trend: ${skor.trendEslesmesi.join(',')}`,
     };
 }
 
-/**
- * Teknik analiz sinyallerinden oy üret
- */
-export function teknikOyu(sinyaller: IndicatorResult[]): ModulOyu {
-    const alSayisi = sinyaller.filter(s => s.signal === 'AL').length;
-    const satSayisi = sinyaller.filter(s => s.signal === 'SAT').length;
-    const toplam = sinyaller.length;
-
+// 3. Orion V3 (Gelişmiş Teknik)
+export function orionOyu(skor: OrionScoreResult): ModulOyu {
     let oy: OyTipi = 'BEKLE';
-    let guven = 50;
+    let guven = skor.totalScore;
 
-    if (toplam > 0) {
-        const alOran = alSayisi / toplam;
-        const satOran = satSayisi / toplam;
-
-        if (alOran >= 0.6) {
-            oy = 'AL';
-            guven = Math.round(alOran * 100);
-        } else if (satOran >= 0.6) {
-            oy = 'SAT';
-            guven = Math.round(satOran * 100);
-        }
-    }
-
-    const detay = sinyaller.map(s => `${s.name}: ${s.signal}`).join(', ');
+    if (skor.totalScore >= 70) oy = 'AL';
+    else if (skor.totalScore <= 30) oy = 'SAT';
 
     return {
-        modul: 'Orion (Teknik Analiz - Kıvanç)',
+        modul: 'Orion V3 (Teknik)',
         oy,
         guven,
-        aciklama: `${alSayisi} AL, ${satSayisi} SAT sinyali. ${detay}`,
+        aciklama: `Skor: ${skor.totalScore}. ${skor.details[0] || ''}`,
     };
 }
 
-/**
- * Perşembe teknik analizinden oy üret
- */
-export function persembeOyu(analiz: PersembeAnaliz): ModulOyu {
+// 4. Athena (Perşembe) - Basitleştirilmiş
+export function athenaOyu(trendYonu: 'YUKARI' | 'AŞAĞI' | 'YATAY'): ModulOyu {
+    const oy = trendYonu === 'YUKARI' ? 'AL' : (trendYonu === 'AŞAĞI' ? 'SAT' : 'BEKLE');
+    return {
+        modul: 'Athena (Faktör)',
+        oy,
+        guven: 60, // Sabit güven
+        aciklama: `Trend: ${trendYonu}. Destek/Direnç analizi.`,
+    };
+}
+
+// 5. Hermes (Sentiment)
+export function hermesOyu(score: number): ModulOyu {
     let oy: OyTipi = 'BEKLE';
-    let guven = 50;
-
-    // Trend yönüne göre
-    if (analiz.trend.yonu === 'YUKARI') {
-        oy = 'AL';
-        guven = 60 + Math.min(30, analiz.trend.guc);
-    } else if (analiz.trend.yonu === 'AŞAĞI') {
-        oy = 'SAT';
-        guven = 60 + Math.min(30, analiz.trend.guc);
-    }
-
-    // Hacim teyidi ekle
-    if (analiz.hacim.teyitli) {
-        guven = Math.min(100, guven + 15);
-    }
-
-    // Formasyon varsa güveni artır
-    if (analiz.formasyon) {
-        guven = Math.min(100, guven + 10);
-    }
+    if (score > 0.6) oy = 'AL';
+    else if (score < 0.4) oy = 'SAT';
 
     return {
-        modul: 'Athena (Faktör Analizi - Perşembe)',
+        modul: 'Hermes (Sentiment)',
         oy,
-        guven,
-        aciklama: `Trend: ${analiz.trend.yonu}, Güç: ${analiz.trend.guc.toFixed(1)}°. ${analiz.hacim.aciklama}`,
+        guven: Math.round(score * 100),
+        aciklama: `Duyarlılık: %${Math.round(score * 100)} pozitif`,
     };
 }
 
-/**
- * Sentiment analizinden oy üret
- */
-export function sentimentOyu(genelSentiment: number): ModulOyu {
+// 6. Aether (Makro)
+export function aetherOyu(regime: string): ModulOyu {
     let oy: OyTipi = 'BEKLE';
-    let guven = Math.abs(genelSentiment) * 100;
-
-    if (genelSentiment > 0.3) {
-        oy = 'AL';
-        guven = 50 + genelSentiment * 50;
-    } else if (genelSentiment < -0.3) {
-        oy = 'SAT';
-        guven = 50 + Math.abs(genelSentiment) * 50;
-    }
+    if (regime === 'RISK_ON' || regime === 'EUPHORIA') oy = 'AL';
+    else if (regime === 'DEEP_RISK_OFF') oy = 'SAT';
 
     return {
-        modul: 'Hermes (Sentiment - Sosyal Medya)',
+        modul: 'Aether (Makro)',
         oy,
-        guven: Math.min(100, guven),
-        aciklama: `Piyasa duyarlılığı: %${(genelSentiment * 100).toFixed(0)} ${genelSentiment > 0 ? 'pozitif' : 'negatif'}`,
+        guven: 80,
+        aciklama: `Rejim: ${regime}`,
+    };
+}
+
+// 7. Phoenix (Strateji)
+export function phoenixOyu(isScanMatch: boolean): ModulOyu {
+    return {
+        modul: 'Phoenix (Strateji)',
+        oy: isScanMatch ? 'AL' : 'BEKLE',
+        guven: isScanMatch ? 90 : 50,
+        aciklama: isScanMatch ? 'Tarama listesinde yakalandı' : 'Tarama dışı',
     };
 }
 
 /**
- * Grand Council toplantısı - Tüm modüllerin oylarını birleştir
+ * Grand Council V2 Toplantısı - 7 Modül
  */
 export function grandCouncil(
     hisse: string,
@@ -194,38 +153,33 @@ export function grandCouncil(
     const satOylar = oylar.filter(o => o.oy === 'SAT');
     const bekleOylar = oylar.filter(o => o.oy === 'BEKLE');
 
-    const toplamOy = {
-        al: alOylar.length,
-        sat: satOylar.length,
-        bekle: bekleOylar.length,
-    };
+    const toplamOy = { al: alOylar.length, sat: satOylar.length, bekle: bekleOylar.length };
 
-    // Ağırlıklı oylama (güven seviyesi ile)
+    // Ağırlıklı oylama - Güven puanlarına göre
     const alAgirlik = alOylar.reduce((sum, o) => sum + o.guven, 0);
     const satAgirlik = satOylar.reduce((sum, o) => sum + o.guven, 0);
+    // Bekle oyları kararı nötrler, direkt ağırlık eklemez ama paydayı büyütürse konsensusu düşürür
     const bekleAgirlik = bekleOylar.reduce((sum, o) => sum + o.guven, 0);
+
     const toplamAgirlik = alAgirlik + satAgirlik + bekleAgirlik;
 
-    // Son karar
     let sonKarar: OyTipi = 'BEKLE';
     let konsensus = 0;
 
-    if (alAgirlik > satAgirlik && alAgirlik > bekleAgirlik) {
-        sonKarar = 'AL';
-        konsensus = Math.round((alAgirlik / toplamAgirlik) * 100);
-    } else if (satAgirlik > alAgirlik && satAgirlik > bekleAgirlik) {
-        sonKarar = 'SAT';
-        konsensus = Math.round((satAgirlik / toplamAgirlik) * 100);
-    } else {
-        konsensus = Math.round((bekleAgirlik / toplamAgirlik) * 100);
+    if (toplamAgirlik > 0) {
+        if (alAgirlik > satAgirlik && alAgirlik > bekleAgirlik) {
+            sonKarar = 'AL';
+            konsensus = Math.round((alAgirlik / toplamAgirlik) * 100);
+        } else if (satAgirlik > alAgirlik && satAgirlik > bekleAgirlik) {
+            sonKarar = 'SAT';
+            konsensus = Math.round((satAgirlik / toplamAgirlik) * 100);
+        } else {
+            konsensus = Math.round((bekleAgirlik / toplamAgirlik) * 100);
+        }
     }
 
-    // Açıklama oluştur
-    const kararEmoji = sonKarar === 'AL' ? '🟢' : sonKarar === 'SAT' ? '🔴' : '🟡';
-    const aciklama = `${kararEmoji} Grand Council Kararı: ${sonKarar}
-Konsensus: %${konsensus}
-Oylama: ${toplamOy.al} AL | ${toplamOy.sat} SAT | ${toplamOy.bekle} BEKLE
-${oylar.map(o => `  - ${o.modul}: ${o.oy} (%${o.guven} güven)`).join('\n')}`;
+    const emoji = sonKarar === 'AL' ? '🟢' : (sonKarar === 'SAT' ? '🔴' : '🟡');
+    const aciklama = `${emoji} Grand Council Kararı: ${sonKarar} (%${konsensus} Konsensus) - ${oylar.length} Modülün katılımıyla.`;
 
     return {
         hisse,
@@ -238,40 +192,15 @@ ${oylar.map(o => `  - ${o.modul}: ${o.oy} (%${o.guven} güven)`).join('\n')}`;
     };
 }
 
-/**
- * Rapor formatla
- */
-export function councilRaporFormatla(karar: CouncilKarar): string {
-    const emoji = karar.sonKarar === 'AL' ? '🟢' : karar.sonKarar === 'SAT' ? '🔴' : '🟡';
-
-    return `
-## 🏛️ Grand Council Kararı - ${karar.hisse}
-
-### ${emoji} Final Karar: **${karar.sonKarar}**
-**Konsensus:** %${karar.konsensus}
-
-### 📊 Modül Oyları
-
-| Modül | Oy | Güven |
-|-------|-----|-------|
-${karar.oylar.map(o => `| ${o.modul} | ${o.oy} | %${o.guven} |`).join('\n')}
-
-### 📈 Oy Dağılımı
-- 🟢 AL: ${karar.toplamOy.al} oy
-- 🔴 SAT: ${karar.toplamOy.sat} oy
-- 🟡 BEKLE: ${karar.toplamOy.bekle} oy
-
-### 💬 Modül Gerekçeleri
-${karar.oylar.map(o => `- **${o.modul}:** ${o.aciklama}`).join('\n')}
-`;
-}
-
 export default {
-    erdincOyu,
+    // Adaptörler
+    atlasOyu,
     wonderkidOyu,
-    teknikOyu,
-    persembeOyu,
-    sentimentOyu,
+    orionOyu,
+    athenaOyu,
+    hermesOyu,
+    aetherOyu,
+    phoenixOyu,
+    // Ana Fonksiyon
     grandCouncil,
-    councilRaporFormatla,
 };

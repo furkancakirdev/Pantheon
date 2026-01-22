@@ -1,5 +1,5 @@
-// Grand Council Sayfası
-// Argus Terminal'den ilham - Tüm modüllerin oylama ile karar vermesi
+// Grand Council V2 Sayfası
+// 7 Modüllü Tam Entegrasyon
 
 export default function CouncilPage() {
     // Mock data - Grand Council kararı
@@ -7,22 +7,24 @@ export default function CouncilPage() {
         hisse: 'ASELS',
         ad: 'Aselsan',
         sonKarar: 'AL' as const,
-        konsensus: 82,
+        konsensus: 88,
         tarih: new Date().toLocaleString('tr-TR'),
         oylar: [
-            { modul: 'Atlas (Temel - Erdinç)', oy: 'AL', guven: 85, aciklama: 'Erdinç skoru: 85/100. F/K düşük, ROE yüksek' },
-            { modul: 'Demeter (Sektör - Wonderkid)', oy: 'AL', guven: 92, aciklama: 'Wonderkid skoru: 92/100. Savunma + Teknoloji trendi' },
-            { modul: 'Orion (Teknik - Kıvanç)', oy: 'AL', guven: 75, aciklama: 'AlphaTrend: AL, MOST: AL sinyali' },
-            { modul: 'Athena (Faktör - Perşembe)', oy: 'BEKLE', guven: 60, aciklama: 'Trend: YUKARI, ancak direnç yakın' },
-            { modul: 'Hermes (Sentiment)', oy: 'AL', guven: 78, aciklama: 'Piyasa duyarlılığı: %72 pozitif' },
+            { modul: 'Atlas V2 (Temel)', oy: 'AL', guven: 85, aciklama: 'F/K: 12.5 (Makul), PD/DD: 1.8. Özsermaye karlılığı artışta.' },
+            { modul: 'Orion V3 (Teknik)', oy: 'AL', guven: 78, aciklama: 'Trend: 25/30, Momentum: 20/25. SMA20 > SMA50 > SMA200.' },
+            { modul: 'Demeter (Sektör)', oy: 'AL', guven: 92, aciklama: 'Savunma sanayi megatrendi. Sektör lideri.' },
+            { modul: 'Aether (Makro)', oy: 'AL', guven: 85, aciklama: 'Euphoria rejimi. Risk iştahı yüksek.' },
+            { modul: 'Chiron (Risk)', oy: 'BEKLE', guven: 60, aciklama: 'Portföyde savunma ağırlığı %30, limit sınırında.' },
+            { modul: 'Phoenix (Strateji)', oy: 'AL', guven: 90, aciklama: 'Golden Cross taramasında yakalandı (Skor: 88).' },
+            { modul: 'Hermes (Sentiment)', oy: 'AL', guven: 75, aciklama: 'Sosyal medya duyarlılığı %75 pozitif.' },
         ],
-        toplamOy: { al: 4, sat: 0, bekle: 1 },
+        toplamOy: { al: 6, sat: 0, bekle: 1 },
     };
 
     const digerKararlar = [
-        { hisse: 'THYAO', sonKarar: 'AL', konsensus: 75 },
+        { hisse: 'THYAO', sonKarar: 'AL', konsensus: 82 },
         { hisse: 'KCHOL', sonKarar: 'BEKLE', konsensus: 58 },
-        { hisse: 'TUPRS', sonKarar: 'BEKLE', konsensus: 52 },
+        { hisse: 'TUPRS', sonKarar: 'SAT', konsensus: 72 }, // Sat örneği
         { hisse: 'SISE', sonKarar: 'AL', konsensus: 68 },
     ];
 
@@ -43,67 +45,59 @@ export default function CouncilPage() {
             {/* Header */}
             <div>
                 <h1 className="text-2xl font-bold flex items-center gap-2">
-                    🏛️ Grand Council
+                    🏛️ Grand Council V2
                 </h1>
                 <p className="text-slate-400">
-                    Argus tarzı - Tüm analiz modüllerinin oylama ile karar vermesi
-                </p>
-            </div>
-
-            {/* Info Card */}
-            <div className="card bg-gradient-to-r from-purple-900/20 to-slate-900 border-purple-500/30">
-                <h3 className="font-semibold text-purple-400 mb-2">🎯 Grand Council Nedir?</h3>
-                <p className="text-sm text-slate-300">
-                    Argus Terminal&apos;den ilham alarak oluşturulmuş bu sistem, tüm analiz modüllerinin
-                    (Erdinç, Wonderkid, Kıvanç, Perşembe, Sentiment) bir hisse için oy vermesini sağlar.
-                    Oylar güven seviyesiyle ağırlıklandırılır ve final karar konsensus ile belirlenir.
+                    7 Bilge Modül tarafından yönetilen merkezi karar mekanizması
                 </p>
             </div>
 
             {/* Featured Decision */}
             <div className="card border-2 border-purple-500/30">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h2 className="text-xl font-bold">{councilKarar.hisse} - {councilKarar.ad}</h2>
+                        <h2 className="text-3xl font-bold text-white">{councilKarar.hisse} - {councilKarar.ad}</h2>
                         <p className="text-sm text-slate-400">Son güncelleme: {councilKarar.tarih}</p>
                     </div>
                     <div className="text-right">
-                        <div className={`text-3xl font-bold px-4 py-2 rounded-lg border ${getKararClass(councilKarar.sonKarar)}`}>
+                        <div className={`text-4xl font-black px-6 py-3 rounded-lg border-2 ${getKararClass(councilKarar.sonKarar)} shadow-lg shadow-emerald-500/20`}>
                             {getKararEmoji(councilKarar.sonKarar)} {councilKarar.sonKarar}
                         </div>
-                        <div className="text-sm text-slate-400 mt-1">Konsensus: %{councilKarar.konsensus}</div>
+                        <div className="text-sm font-bold text-slate-300 mt-2 tracking-wide uppercase">Konsensus: %{councilKarar.konsensus}</div>
                     </div>
                 </div>
 
                 {/* Voting Summary */}
-                <div className="flex gap-4 mb-4">
-                    <div className="flex-1 text-center p-3 bg-emerald-500/10 rounded-lg">
-                        <div className="text-2xl font-bold text-emerald-400">{councilKarar.toplamOy.al}</div>
-                        <div className="text-xs text-slate-400">AL Oyu</div>
+                <div className="flex gap-4 mb-6">
+                    <div className="flex-1 text-center p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                        <div className="text-3xl font-bold text-emerald-400">{councilKarar.toplamOy.al}</div>
+                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">AL Oyu</div>
                     </div>
-                    <div className="flex-1 text-center p-3 bg-red-500/10 rounded-lg">
-                        <div className="text-2xl font-bold text-red-400">{councilKarar.toplamOy.sat}</div>
-                        <div className="text-xs text-slate-400">SAT Oyu</div>
+                    <div className="flex-1 text-center p-4 bg-red-500/10 rounded-xl border border-red-500/20">
+                        <div className="text-3xl font-bold text-red-400">{councilKarar.toplamOy.sat}</div>
+                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">SAT Oyu</div>
                     </div>
-                    <div className="flex-1 text-center p-3 bg-amber-500/10 rounded-lg">
-                        <div className="text-2xl font-bold text-amber-400">{councilKarar.toplamOy.bekle}</div>
-                        <div className="text-xs text-slate-400">BEKLE Oyu</div>
+                    <div className="flex-1 text-center p-4 bg-amber-500/10 rounded-xl border border-amber-500/20">
+                        <div className="text-3xl font-bold text-amber-400">{councilKarar.toplamOy.bekle}</div>
+                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">BEKLE Oyu</div>
                     </div>
                 </div>
 
-                {/* Module Votes */}
+                {/* Module Votes List */}
                 <div className="space-y-3">
-                    <h3 className="font-semibold text-slate-300">Modül Oyları</h3>
+                    <h3 className="font-semibold text-slate-300 border-b border-slate-700 pb-2 mb-4">Modül Oyları ve Gerekçeler</h3>
                     {councilKarar.oylar.map((oy, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                        <div key={i} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border border-slate-700 hover:border-slate-500 transition">
                             <div className="flex-1">
-                                <div className="font-medium">{oy.modul}</div>
-                                <div className="text-xs text-slate-400">{oy.aciklama}</div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <div className="font-bold text-lg text-slate-200">{oy.modul}</div>
+                                    <div className="text-xs px-2 py-0.5 rounded bg-slate-700 text-slate-300">Güven: %{oy.guven}</div>
+                                </div>
+                                <div className="text-sm text-slate-400 leading-relaxed">{oy.aciklama}</div>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <div className="text-sm text-slate-400">%{oy.guven} güven</div>
-                                <div className={`px-3 py-1 rounded font-bold text-sm ${getKararClass(oy.oy)}`}>
-                                    {getKararEmoji(oy.oy)} {oy.oy}
+                            <div className="ml-4">
+                                <div className={`px-4 py-2 rounded-lg font-bold text-sm min-w-[80px] text-center ${getKararClass(oy.oy)}`}>
+                                    {oy.oy}
                                 </div>
                             </div>
                         </div>
@@ -113,44 +107,17 @@ export default function CouncilPage() {
 
             {/* Other Decisions */}
             <div className="card">
-                <h2 className="card-header">📊 Diğer Council Kararları</h2>
+                <h2 className="card-header">📊 İzleme Listesi Özetleri</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {digerKararlar.map((k) => (
-                        <div key={k.hisse} className="p-4 bg-slate-800/50 rounded-lg text-center">
-                            <div className="text-lg font-bold mb-2">{k.hisse}</div>
-                            <div className={`inline-block px-3 py-1 rounded font-bold ${getKararClass(k.sonKarar)}`}>
-                                {getKararEmoji(k.sonKarar)} {k.sonKarar}
+                        <div key={k.hisse} className="p-4 bg-slate-800/50 rounded-lg text-center hover:bg-slate-800 transition cursor-pointer">
+                            <div className="text-lg font-bold mb-2 text-white">{k.hisse}</div>
+                            <div className={`inline-block px-3 py-1 rounded font-bold mb-2 ${getKararClass(k.sonKarar)}`}>
+                                {k.sonKarar}
                             </div>
-                            <div className="text-xs text-slate-400 mt-2">%{k.konsensus} konsensus</div>
+                            <div className="text-xs text-slate-400 font-medium">%{k.konsensus} Güç</div>
                         </div>
                     ))}
-                </div>
-            </div>
-
-            {/* Modül Açıklamaları */}
-            <div className="card">
-                <h3 className="card-header">📚 Modül Referansları</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                    <div className="p-3 bg-slate-800/50 rounded-lg">
-                        <div className="font-semibold text-blue-400">Atlas (Temel Analiz)</div>
-                        <div className="text-slate-400">Yaşar Erdinç kriterleri: F/K, PD/DD, ROE, DuPont</div>
-                    </div>
-                    <div className="p-3 bg-slate-800/50 rounded-lg">
-                        <div className="font-semibold text-yellow-400">Demeter (Sektör Rotasyonu)</div>
-                        <div className="text-slate-400">Wonderkid: Megatrend eşleştirme, yönetim vizyonu</div>
-                    </div>
-                    <div className="p-3 bg-slate-800/50 rounded-lg">
-                        <div className="font-semibold text-purple-400">Orion (Teknik Analiz)</div>
-                        <div className="text-slate-400">Kıvanç: AlphaTrend, MOST, MavilimW</div>
-                    </div>
-                    <div className="p-3 bg-slate-800/50 rounded-lg">
-                        <div className="font-semibold text-cyan-400">Athena (Faktör Analizi)</div>
-                        <div className="text-slate-400">Ali Perşembe: Destek/Direnç, Trend, Fibonacci</div>
-                    </div>
-                    <div className="p-3 bg-slate-800/50 rounded-lg">
-                        <div className="font-semibold text-pink-400">Hermes (Sentiment)</div>
-                        <div className="text-slate-400">Sosyal medya: 22 hesap, Türkçe NLP</div>
-                    </div>
                 </div>
             </div>
         </div>

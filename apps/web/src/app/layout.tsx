@@ -24,27 +24,40 @@ export default function RootLayout({
               <span className="text-2xl">📊</span>
               <h1 className="text-xl font-bold text-emerald-400">InvestorAgent</h1>
             </div>
-            <nav className="space-y-2">
+            <nav className="space-y-1">
+              <div className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase">Genel</div>
               <a href="/" className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 text-emerald-400">
                 <span>🏠</span> Dashboard
               </a>
-              <a href="/council" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition">
+              <a href="/council" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition text-purple-400 font-bold">
                 <span>🏛️</span> Grand Council
               </a>
+
+              <div className="px-3 py-2 mt-4 text-xs font-semibold text-slate-500 uppercase">Analiz</div>
               <a href="/stocks" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition">
-                <span>📈</span> Hisseler
+                <span>📈</span> Hisseler & Atlas
               </a>
-              <a href="/funds" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition">
-                <span>💰</span> Fonlar
+              <a href="/orion" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition">
+                <span>⚡</span> Orion (Teknik)
               </a>
+              <a href="/phoenix" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition">
+                <span>🔥</span> Phoenix (Strateji)
+              </a>
+
+              <div className="px-3 py-2 mt-4 text-xs font-semibold text-slate-500 uppercase">Makro & Risk</div>
+              <a href="/aether" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition">
+                <span>🌍</span> Aether (Makro)
+              </a>
+              <a href="/chiron" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition">
+                <span>🛡️</span> Chiron (Risk)
+              </a>
+
+              <div className="px-3 py-2 mt-4 text-xs font-semibold text-slate-500 uppercase">Diğer</div>
               <a href="/wonderkid" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition">
-                <span>⭐</span> Wonderkid
+                <span>⭐</span> Wonderkid (Sektör)
               </a>
               <a href="/sentiment" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition">
-                <span>🐦</span> Sentiment
-              </a>
-              <a href="/reports" className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition">
-                <span>📋</span> Raporlar
+                <span>🐦</span> Sentiment (Hermes)
               </a>
             </nav>
           </aside>
