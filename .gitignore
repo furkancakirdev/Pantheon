@@ -33,3 +33,5 @@ npm-debug.log*
 # Database
 data/*.db
 data/*.sqlite
+
+/generated/prisma

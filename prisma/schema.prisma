@@ -1,0 +1,148 @@
+// Prisma Schema - InvestorAgent
+// SQLite veritabanı için veri modelleri
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ===== HİSSE SENETLERİ =====
+
+model Stock {
+  id            Int       @id @default(autoincrement())
+  kod           String    @unique
+  ad            String
+  sektor        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  fundamentals  Fundamental[]
+  scores        Score[]
+  alerts        Alert[]
+}
+
+// Temel veriler (İş Yatırım API'den)
+model Fundamental {
+  id            Int       @id @default(autoincrement())
+  stockId       Int
+  stock         Stock     @relation(fields: [stockId], references: [id])
+  
+  kapanis       Float?
+  fk            Float?    // Fiyat/Kazanç
+  pddd          Float?    // PD/DD
+  fdFavok       Float?    // FD/FAVÖK
+  roe           Float?    // Özkaynak Karlılığı
+  borcOzkaynak  Float?    // Borç/Özkaynak
+  piyasaDegeri  Float?    // Piyasa Değeri
+  yabanciOran   Float?    // Yabancı Oranı
+  
+  tarih         DateTime  @default(now())
+  
+  @@index([stockId, tarih])
+}
+
+// Analiz skorları
+model Score {
+  id            Int       @id @default(autoincrement())
+  stockId       Int
+  stock         Stock     @relation(fields: [stockId], references: [id])
+  
+  erdincSkor    Int?      // Yaşar Erdinç skoru (0-100)
+  wonderkidSkor Int?      // Wonderkid skoru (0-100)
+  teknikSinyal  String?   // AL, SAT, BEKLE
+  
+  gerekceler    String?   // JSON string
+  uyarilar      String?   // JSON string
+  
+  tarih         DateTime  @default(now())
+  
+  @@index([stockId, tarih])
+}
+
+// ===== FONLAR (TEFAS) =====
+
+model Fund {
+  id            Int       @id @default(autoincrement())
+  kod           String    @unique
+  ad            String
+  tur           String?   // Fon türü
+  kurucu        String?   // Kurucu şirket
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  returns       FundReturn[]
+}
+
+model FundReturn {
+  id              Int       @id @default(autoincrement())
+  fundId          Int
+  fund            Fund      @relation(fields: [fundId], references: [id])
+  
+  gunlukGetiri    Float?
+  haftalikGetiri  Float?
+  aylikGetiri     Float?
+  yillikGetiri    Float?
+  fonBuyuklugu    Float?
+  
+  tarih           DateTime  @default(now())
+  
+  @@index([fundId, tarih])
+}
+
+// ===== SENTİMENT =====
+
+model SentimentData {
+  id            Int       @id @default(autoincrement())
+  kaynak        String    // twitter, youtube, haber
+  hesap         String?   // @username
+  icerik        String    // Tweet/haber metni
+  skor          Float?    // -1 ile 1 arası
+  label         String?   // POZITIF, NEGATIF, NOTR
+  
+  ilgiliHisse   String?   // Varsa ilgili hisse kodu
+  
+  tarih         DateTime  @default(now())
+  
+  @@index([kaynak, tarih])
+  @@index([ilgiliHisse])
+}
+
+// ===== BİLDİRİMLER =====
+
+model Alert {
+  id            Int       @id @default(autoincrement())
+  stockId       Int?
+  stock         Stock?    @relation(fields: [stockId], references: [id])
+  
+  tip           String    // AL_SINYAL, SAT_SINYAL, WONDERKID, HABER
+  baslik        String
+  mesaj         String
+  okundu        Boolean   @default(false)
+  
+  createdAt     DateTime  @default(now())
+  
+  @@index([okundu, createdAt])
+}
+
+// ===== PİYASA VERİLERİ =====
+
+model MarketSnapshot {
+  id            Int       @id @default(autoincrement())
+  
+  xu100         Float?
+  xu100Degisim  Float?
+  xu030         Float?
+  xu030Degisim  Float?
+  dolarTry      Float?
+  euroTry       Float?
+  altin         Float?
+  
+  tarih         DateTime  @default(now())
+  
+  @@index([tarih])
+}
