@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@db/*": ["./db/*"],
+      "@api/*": ["./api-clients/*"],
+      "@api-clients/*": ["./api-clients/*"],
+      "@analysis/*": ["./analysis/*"]
+    }
+  }
+}

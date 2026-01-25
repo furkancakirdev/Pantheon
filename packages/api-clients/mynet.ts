@@ -59,7 +59,7 @@ export async function fetchRealTimeMarket(): Promise<MarketData> {
         throw new Error(`Mynet API hatası: ${response.status}`);
     }
 
-    return response.json();
+    return await response.json() as MarketData;
 }
 
 /**
@@ -77,7 +77,7 @@ export async function fetchMostActiveStocks(): Promise<LiveStock[]> {
         throw new Error(`Mynet API hatası: ${response.status}`);
     }
 
-    return response.json();
+    return await response.json() as LiveStock[];
 }
 
 /**

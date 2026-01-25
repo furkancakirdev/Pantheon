@@ -1,14 +1,17 @@
 /**
  * Kıvanç Özbilgiç İndikatörleri
- * 
+ *
  * Kaynak: TradingView - KivancOzbilgic
- * 
+ *
  * İndikatörler:
  * - AlphaTrend
  * - OTT (Optimized Trend Tracker)
  * - MOST (Moving Average Optimized Stop-Loss)
  * - PMAX (Profit Maximizer)
  * - MavilimW
+ * - SuperTrend
+ * - KIVANÇ HL (Harmonic Levels)
+ * - Stochastic RSI
  */
 
 /**
@@ -100,9 +103,10 @@ export function atr(candles: Candle[], period: number = 14): number[] {
 
 /**
  * MavilimW - Kıvanç'ın özgün hareketli ortalaması
- * İki WMA'nın WMA'sı
+ * Fibonacci dizili kaskad WMA: 3, 5, 8, 13, 21, 34
+ * Formül: M1=C, M2=WMA(M1,3), M3=WMA(M2,5), M4=WMA(M3,8), M5=WMA(M4,13), M6=WMA(M5,21), M7=WMA(M6,34)
  */
-export function mavilimW(candles: Candle[], period1: number = 3, period2: number = 5): number[] {
+export function mavilimW(candles: Candle[]): number[] {
     const closes = candles.map(c => c.close);
 
     // Weighted Moving Average hesapla
@@ -125,14 +129,16 @@ export function mavilimW(candles: Candle[], period1: number = 3, period2: number
         return result;
     };
 
-    const fib1 = period1 * period2;
-    const fib2 = fib1 + period1;
+    // Fibonacci diziliminde kaskad WMA
+    const m1 = closes;
+    const m2 = wma(m1, 3);
+    const m3 = wma(m2.map(x => x || 0), 5);
+    const m4 = wma(m3.map(x => x || 0), 8);
+    const m5 = wma(m4.map(x => x || 0), 13);
+    const m6 = wma(m5.map(x => x || 0), 21);
+    const m7 = wma(m6.map(x => x || 0), 34);
 
-    const wma1 = wma(closes, fib1);
-    const wma2 = wma(wma1.filter(x => !isNaN(x)), fib2);
-
-    // Basitlik için ilk WMA'yı döndür
-    return wma1;
+    return m7;
 }
 
 /**
@@ -220,11 +226,214 @@ export function alphaTrend(
 }
 
 /**
+ * SuperTrend - Kıvanç Özbilgiç
+ * ATR tabanlı trend takip indikatörü
+ * Formül: AP = (H+L)/2, OFFSET = coeff * ATR(period)
+ */
+export function superTrend(
+    candles: Candle[],
+    period: number = 10,
+    coeff: number = 3
+): { line: number[]; signal: Signal; trend: number } {
+    const highs = candles.map(c => c.high);
+    const lows = candles.map(c => c.low);
+    const closes = candles.map(c => c.close);
+    const atrValues = atr(candles, period);
+
+    const stLine: number[] = [];
+    let trend = 0; // 1: up, -1: down
+
+    for (let i = 0; i < candles.length; i++) {
+        const ap = (highs[i] + lows[i]) / 2;
+        const offset = atrValues[i] * coeff;
+        const upperBand = ap + offset;
+        const lowerBand = ap - offset;
+
+        if (i === 0) {
+            stLine.push(lowerBand);
+            trend = 1;
+        } else {
+            const prevST = stLine[i - 1];
+            const prevClose = closes[i - 1];
+
+            // Trend direction logic
+            if (prevST === upperBand || (prevClose > prevST && closes[i] > prevST)) {
+                // Uptrend
+                stLine.push(lowerBand);
+                trend = 1;
+            } else {
+                // Downtrend
+                stLine.push(upperBand);
+                trend = -1;
+            }
+        }
+    }
+
+    // Sinyal belirleme
+    const lastClose = closes[closes.length - 1];
+    const lastST = stLine[stLine.length - 1];
+    let signal: Signal = 'BEKLE';
+
+    if (lastClose > lastST) signal = 'AL';
+    else if (lastClose < lastST) signal = 'SAT';
+
+    return { line: stLine, signal, trend };
+}
+
+/**
+ * KIVANÇ HL (Harmonic Levels) - Fibonacci harmonik seviyeler
+ * Periodlar: 13, 21, 34, 55, 89, 144 (Fibonacci dizisi)
+ * Destek ve direnç seviyeleri hesaplar
+ */
+export function kivancHL(candles: Candle[]): {
+    h6: number;
+    l6: number;
+    m1: number;
+    levels: { h1: number; h2: number; h3: number; h4: number; h5: number; h6: number;
+             l1: number; l2: number; l3: number; l4: number; l5: number; l6: number; };
+} {
+    const highs = candles.map(c => c.high);
+    const lows = candles.map(c => c.low);
+    const fibPeriods = [13, 21, 34, 55, 89, 144];
+
+    // HHV (Highest High Value) and LLV (Lowest Low Value) functions
+    const hhv = (data: number[], period: number) => {
+        const result: number[] = [];
+        for (let i = 0; i < data.length; i++) {
+            const slice = data.slice(Math.max(0, i - period + 1), i + 1);
+            result.push(Math.max(...slice));
+        }
+        return result;
+    };
+
+    const llv = (data: number[], period: number) => {
+        const result: number[] = [];
+        for (let i = 0; i < data.length; i++) {
+            const slice = data.slice(Math.max(0, i - period + 1), i + 1);
+            result.push(Math.min(...slice));
+        }
+        return result;
+    };
+
+    // Calculate harmonic levels
+    let h = [...highs];
+    let l = [...lows];
+
+    for (const p of fibPeriods) {
+        const hhvVal = hhv(h, p);
+        const llvVal = llv(l, p);
+        h = hhvVal;
+        l = llvVal;
+    }
+
+    const h6 = h[h.length - 1];
+    const l6 = l[l.length - 1];
+    const m1 = (h6 + l6) / 2;
+
+    return {
+        h6,
+        l6,
+        m1,
+        levels: {
+            h1: hhv(highs, 13)[highs.length - 1],
+            h2: hhv(highs, 21)[highs.length - 1],
+            h3: hhv(highs, 34)[highs.length - 1],
+            h4: hhv(highs, 55)[highs.length - 1],
+            h5: hhv(highs, 89)[highs.length - 1],
+            h6: h6,
+            l1: llv(lows, 13)[lows.length - 1],
+            l2: llv(lows, 21)[lows.length - 1],
+            l3: llv(lows, 34)[lows.length - 1],
+            l4: llv(lows, 55)[lows.length - 1],
+            l5: llv(lows, 89)[lows.length - 1],
+            l6: l6,
+        },
+    };
+}
+
+/**
+ * Stochastic RSI
+ * RSI üzerinde Stochastic osilatörü
+ */
+export function stochasticRSI(
+    candles: Candle[],
+    rsiPeriod: number = 14,
+    stochPeriod: number = 14,
+    smoothK: number = 3,
+    smoothD: number = 3
+): { k: number[]; d: number[]; signal: Signal } {
+    const closes = candles.map(c => c.close);
+
+    // RSI hesapla
+    const rsiValues: number[] = [];
+    let gains = 0;
+    let losses = 0;
+
+    for (let i = 0; i < closes.length; i++) {
+        if (i === 0) {
+            gains = 0;
+            losses = 0;
+        } else {
+            const change = closes[i] - closes[i - 1];
+            gains += change > 0 ? change : 0;
+            losses += change < 0 ? Math.abs(change) : 0;
+        }
+
+        if (i < rsiPeriod) {
+            rsiValues.push(50);
+        } else {
+            const avgGain = gains / rsiPeriod;
+            const avgLoss = losses / rsiPeriod;
+            const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+            rsiValues.push(100 - (100 / (1 + rs)));
+        }
+    }
+
+    // Stochastic RSI hesapla
+    const kValues: number[] = [];
+    for (let i = 0; i < rsiValues.length; i++) {
+        if (i < stochPeriod - 1) {
+            kValues.push(50);
+        } else {
+            const rsiSlice = rsiValues.slice(i - stochPeriod + 1, i + 1);
+            const rsiHigh = Math.max(...rsiSlice);
+            const rsiLow = Math.min(...rsiSlice);
+            const stochRSI = rsiHigh === rsiLow ? 50 : ((rsiValues[i] - rsiLow) / (rsiHigh - rsiLow)) * 100;
+            kValues.push(stochRSI);
+        }
+    }
+
+    // Smooth K
+    const smoothedK = sma(kValues, smoothK);
+
+    // Smooth D (SMA of smoothed K)
+    const smoothedD = sma(smoothedK.map(x => x || 50), smoothD);
+
+    // Sinyal belirleme
+    const lastK = smoothedK[smoothedK.length - 1] || 50;
+    const lastD = smoothedD[smoothedD.length - 1] || 50;
+    const prevK = smoothedK[smoothedK.length - 2] || 50;
+    const prevD = smoothedD[smoothedD.length - 2] || 50;
+
+    let signal: Signal = 'BEKLE';
+    if (prevK <= prevD && lastK > lastD) signal = 'AL';
+    else if (prevK >= prevD && lastK < lastD) signal = 'SAT';
+
+    return {
+        k: smoothedK,
+        d: smoothedD,
+        signal,
+    };
+}
+
+/**
  * Tüm indikatörleri çalıştır ve özet döndür
  */
 export function tumIndikatorler(candles: Candle[]): IndicatorResult[] {
     const mostResult = most(candles);
     const alphaResult = alphaTrend(candles);
+    const superTrendResult = superTrend(candles);
+    const stochResult = stochasticRSI(candles);
 
     return [
         {
@@ -239,6 +448,18 @@ export function tumIndikatorler(candles: Candle[]): IndicatorResult[] {
             signal: mostResult.signal,
             description: `MOST stop-loss seviyesi: ${mostResult.signal}`,
         },
+        {
+            name: 'SuperTrend',
+            value: superTrendResult.line[superTrendResult.line.length - 1],
+            signal: superTrendResult.signal,
+            description: `SuperTrend trend: ${superTrendResult.signal}`,
+        },
+        {
+            name: 'StochRSI',
+            value: stochResult.k[stochResult.k.length - 1],
+            signal: stochResult.signal,
+            description: `StochRSI momentum: ${stochResult.signal}`,
+        },
     ];
 }
 
@@ -249,5 +470,8 @@ export default {
     mavilimW,
     most,
     alphaTrend,
+    superTrend,
+    kivancHL,
+    stochasticRSI,
     tumIndikatorler,
 };

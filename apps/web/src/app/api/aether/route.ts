@@ -4,8 +4,8 @@
  */
 
 import { NextResponse } from 'next/server';
-import { fred } from '../../../../../packages/api-clients/fred';
-import { fetchRealTimeMarket } from '../../../../../packages/api-clients/mynet';
+import { fred } from '../../../../../../packages/api-clients/fred';
+import { fetchRealTimeMarket } from '../../../../../../packages/api-clients/mynet';
 
 export async function GET() {
     try {

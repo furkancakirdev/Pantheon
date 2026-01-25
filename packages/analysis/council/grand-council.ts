@@ -12,9 +12,9 @@
  * 7. Phoenix (Strateji): Otomatik Sinyal
  */
 
-import { WonderkidScore } from '../wonderkid/engine.js';
-import { OrionScoreResult } from '../orion/engine.js';
-import { AtlasResult } from '../atlas/engine.js';
+import { WonderkidScore } from '../wonderkid/engine';
+import { OrionScoreResult } from '../orion/engine';
+import { AtlasResult } from '../atlas/engine';
 
 /**
  * Modül oyları
@@ -50,14 +50,15 @@ export interface CouncilKarar {
 // 1. Atlas V2 (Temel)
 export function atlasOyu(analiz: AtlasResult): ModulOyu {
     let oy: OyTipi = 'BEKLE';
-    if (analiz.verdict === 'UCUZ') oy = 'AL';
-    else if (analiz.verdict === 'PAHALI') oy = 'SAT';
+    // Yeni Atlas V3 verdict tipleri: GÜÇLÜ AL, AL, TUT, SAT, GÜÇLÜ SAT
+    if (analiz.verdict === 'GÜÇLÜ AL' || analiz.verdict === 'AL') oy = 'AL';
+    else if (analiz.verdict === 'SAT' || analiz.verdict === 'GÜÇLÜ SAT') oy = 'SAT';
 
     return {
-        modul: 'Atlas V2 (Dinamik Temel)',
+        modul: 'Atlas V3 (Erdinç Kuralları)',
         oy,
         guven: analiz.score,
-        aciklama: `${analiz.verdict}. F/K: ${analiz.dynamicFK?.toFixed(2) || 'N/A'}. ${analiz.details[0] || ''}`,
+        aciklama: `${analiz.verdict}. F/K: ${analiz.dynamicFK?.toFixed(2) || 'N/A'}. Skor: ${analiz.score}/100`,
     };
 }
 
@@ -85,11 +86,14 @@ export function orionOyu(skor: OrionScoreResult): ModulOyu {
     if (skor.totalScore >= 70) oy = 'AL';
     else if (skor.totalScore <= 30) oy = 'SAT';
 
+    const firstDetail = skor.details?.[0] || '';
+    const kivancSignal = `${skor.kivanc?.alphaTrend}/${skor.kivanc?.most}/${skor.kivanc?.mavilimW}`;
+
     return {
         modul: 'Orion V3 (Teknik)',
         oy,
         guven,
-        aciklama: `Skor: ${skor.totalScore}. ${skor.details[0] || ''}`,
+        aciklama: `Skor: ${skor.totalScore}. ${kivancSignal}. ${firstDetail}`,
     };
 }
 

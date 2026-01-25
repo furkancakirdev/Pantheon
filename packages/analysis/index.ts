@@ -1,19 +1,63 @@
 /**
  * Analiz Motoru - Ana giriş noktası
  * Tüm analiz modüllerini bir araya getirir
+ * 
+ * Pantheon v2.0 Modülleri:
+ * - Atlas V3 (Yaşar Erdinç + Genişletilmiş Temel Analiz)
+ * - Orion V4 (Ali Perşembe + Kıvanç Özbilgiç Teknik)
+ * - Aether (Makro Rejim)
+ * - Hermes V2 (Twitter 12 Hesap + LLM Sentiment)
+ * - Phoenix (Strateji Birleştirme)
+ * - Council (Grand Council Oylama)
+ * - Chiron (Rejim + Öğrenme)
+ * - Cronos (Zamanlama Faktörü) [YENİ]
+ * - Athena (Faktör Zekası) [YENİ]
+ * - Poseidon (ETF/Emtia Modu) [YENİ]
  */
 
-import { fetchAllStocks, type StockFundamentals } from '../api-clients/isyatirim.js';
-import { hesaplaErdincSkor, skorlaVeSirala, raporFormatla, type ErdincScore } from './erdinc/rules.js';
-import { topWonderkids, wonderkidRapor, type WonderkidScore } from './wonderkid/engine.js';
-import { persembeAnaliz, type PersembeAnaliz } from './persembe/technical.js';
-import { tumIndikatorler, type IndicatorResult } from './kivanc/indicators.js';
+// Legacy exports
+import { fetchAllStocks, type StockFundamentals } from '@api/isyatirim';
+import { hesaplaErdincSkor, skorlaVeSirala, raporFormatla, type ErdincScore } from './erdinc/rules';
+import { topWonderkids, wonderkidRapor, type WonderkidScore } from './wonderkid/engine';
+import { persembeAnaliz, type PersembeAnaliz } from './persembe/technical';
+import { tumIndikatorler, type IndicatorResult } from './kivanc/indicators';
 
-// Re-export all modules
-export * from './erdinc/rules.js';
-export * from './wonderkid/engine.js';
-export * from './persembe/technical.js';
-export * from './kivanc/indicators.js';
+// Re-export legacy modules
+export * from './erdinc/rules';
+export * from './wonderkid/engine';
+export * from './persembe/technical';
+export * from './kivanc/indicators';
+
+// Pantheon V2 Modülleri
+export * from './atlas/engine';
+export * from './orion/engine';
+export * from './aether/engine';
+export * from './hermes/engine';
+export * from './phoenix/engine';
+export * from './council/grand-council';
+export * from './council/explanation';
+export * from './chiron/risk';
+export * from './cronos/engine';
+export * from './athena/engine';
+export * from './poseidon/engine';
+export * from './pantheon/score';
+export * from './autopilot/engine';
+export * from './voice/engine';
+
+// Named exports for easy access
+export { default as atlas } from './atlas/engine';
+export { default as orion } from './orion/engine';
+export { default as aether } from './aether/engine';
+export { default as hermes } from './hermes/engine';
+export { default as phoenix } from './phoenix/engine';
+export { default as council } from './council/grand-council';
+export { default as chiron } from './chiron/risk';
+export { default as cronos } from './cronos/engine';
+export { default as athena } from './athena/engine';
+export { default as poseidon } from './poseidon/engine';
+export { default as pantheonScore } from './pantheon/score';
+export { default as autopilot } from './autopilot/engine';
+export { default as voice } from './voice/engine';
 
 
 export interface AnalizRaporu {
@@ -55,7 +99,7 @@ export async function tamAnaliz(): Promise<AnalizRaporu> {
  */
 export function raporYazdir(rapor: AnalizRaporu): void {
     console.log('\n' + '='.repeat(60));
-    console.log('📊 YATIRIM AJAN RAPORU');
+    console.log('📊 PANTHEON TRADING OS RAPORU');
     console.log('='.repeat(60));
     console.log(`Tarih: ${rapor.tarih}`);
     console.log(`Toplam Analiz Edilen: ${rapor.toplamHisse} hisse`);

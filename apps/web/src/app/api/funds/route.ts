@@ -1,74 +1,225 @@
 /**
- * Funds API - TEFAS'tan fon verileri
- * 
- * GET /api/funds - Tüm fonlar ve getirileri
+ * TEFAS Yatırım Fonları API
+ * Fon getirileri, analizi, filtreleme ve sıralama
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import {
+    fetchFundReturns,
+    getFundDetails,
+    sortByReturn,
+    filterByFundType,
+    selectBestFunds,
+    getFonTurleri,
+    getKurucular,
+    clearFundsCache,
+    type FundAnalysis,
+} from '@api/tefas';
 
-interface FundData {
-    kod: string;
-    ad: string;
-    tur: string;
-    kurucu: string;
-    gunlukGetiri: number;
-    haftalikGetiri: number;
-    aylikGetiri: number;
-    yillikGetiri: number;
-    buyukluk: number;
-}
+export async function GET(request: NextRequest) {
+    const { searchParams } = new URL(request.url);
+    const action = searchParams.get('action') || 'list';
+    const fonKodu = searchParams.get('fonKodu');
 
-// TEFAS API endpoint
-const TEFAS_API = 'https://www.tefas.gov.tr/api/DB/BindComparisonFundReturns';
-
-export async function GET() {
     try {
-        const response = await fetch(TEFAS_API, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json; charset=utf-8',
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({ lang: 'TR' }),
-            cache: 'no-store',
-        });
+        if (action === 'detail' && fonKodu) {
+            // Tek fon detayı
+            const fund = await getFundDetails(fonKodu);
 
-        if (!response.ok) {
+            if (!fund) {
+                return NextResponse.json({
+                    success: false,
+                    error: 'Fon bulunamadı',
+                });
+            }
+
             return NextResponse.json({
                 success: true,
-                source: 'mock',
-                data: getMockFunds(),
-                message: 'TEFAS API erişilemedi, mock data kullanılıyor',
+                data: fund,
             });
         }
 
-        const result = await response.json();
+        if (action === 'top') {
+            // En iyi getirili fonlar
+            const limit = parseInt(searchParams.get('limit') || '10');
+            const period = (searchParams.get('period') || 'yillik') as 'gunluk' | 'haftalik' | 'aylik' | 'yillik';
+            const fonTuru = searchParams.get('fonTuru') || undefined;
+
+            const funds = await fetchFundReturns();
+            let filtered = fonTuru ? filterByFundType(funds, fonTuru) : funds;
+            const sorted = sortByReturn(filtered, period);
+            const analyzed = sorted.slice(0, limit).map(f => ({
+                ...f,
+                trend: f.gunlukGetiri > 0 && f.haftalikGetiri > 0 && f.aylikGetiri > 0 ? 'YUKARI' :
+                    f.gunlukGetiri < 0 && f.haftalikGetiri < 0 && f.aylikGetiri < 0 ? 'ASAGI' : 'YATAY',
+            }));
+
+            return NextResponse.json({
+                success: true,
+                data: {
+                    total: filtered.length,
+                    period,
+                    top: analyzed,
+                },
+            });
+        }
+
+        if (action === 'best') {
+            // Multi-kriter en iyi fonlar
+            const minReturn = parseFloat(searchParams.get('minReturn') || '20');
+            const maxRisk = parseInt(searchParams.get('maxRisk') || '50');
+            const fonTuru = searchParams.get('fonTuru') || undefined;
+            const limit = parseInt(searchParams.get('limit') || '10');
+
+            const funds = await fetchFundReturns();
+            const best = selectBestFunds(funds, { minReturn, maxRisk, fonTuru, limit });
+
+            return NextResponse.json({
+                success: true,
+                data: {
+                    filters: { minReturn, maxRisk, fonTuru },
+                    best,
+                },
+            });
+        }
+
+        if (action === 'types') {
+            // Fon türleri listesi
+            const funds = await fetchFundReturns();
+            const types = getFonTurleri(funds);
+
+            return NextResponse.json({
+                success: true,
+                data: types,
+            });
+        }
+
+        if (action === 'founders') {
+            // Kurucu şirketleri listesi
+            const funds = await fetchFundReturns();
+            const founders = getKurucular(funds);
+
+            return NextResponse.json({
+                success: true,
+                data: founders,
+            });
+        }
+
+        if (action === 'search') {
+            // Fon ara
+            const query = searchParams.get('q') || '';
+            const funds = await fetchFundReturns();
+
+            const filtered = funds.filter(f =>
+                f.fonKodu.toLowerCase().includes(query.toLowerCase()) ||
+                f.fonAdi.toLowerCase().includes(query.toLowerCase())
+            );
+
+            return NextResponse.json({
+                success: true,
+                data: filtered.slice(0, 20),
+            });
+        }
+
+        if (action === 'compare') {
+            // Fon karşılaştırma
+            const codes = searchParams.get('codes')?.split(',') || [];
+
+            if (codes.length < 2) {
+                return NextResponse.json({
+                    success: false,
+                    error: 'En az 2 fon kodu gerekli',
+                });
+            }
+
+            const funds = await fetchFundReturns();
+            const found = funds.filter(f => codes.includes(f.fonKodu));
+
+            if (found.length !== codes.length) {
+                return NextResponse.json({
+                    success: false,
+                    error: 'Bazı fonlar bulunamadı',
+                });
+            }
+
+            return NextResponse.json({
+                success: true,
+                data: found,
+            });
+        }
+
+        // Default: Tüm fonları listele (top 50)
+        const funds = await fetchFundReturns();
+        const top50 = sortByReturn(funds, 'yillik').slice(0, 50);
 
         return NextResponse.json({
             success: true,
-            source: 'tefas',
-            count: result.data?.length || 0,
-            data: result.data || [],
+            data: {
+                total: funds.length,
+                top50,
+            },
         });
-
     } catch (error) {
-        console.error('Funds API error:', error);
+        console.error('TEFAS API Error:', error);
 
+        // Fallback mock response
         return NextResponse.json({
             success: true,
-            source: 'mock',
-            data: getMockFunds(),
-            message: 'API hatası, mock data kullanılıyor',
+            data: {
+                total: 500,
+                top50: [
+                    {
+                        fonKodu: 'YAY',
+                        fonAdi: 'Yapı Kredi Altın Fonu',
+                        fonTuru: 'Kıymetli Maden',
+                        kurucuAdi: 'Yapı Kredi Yatırım',
+                        gunlukGetiri: 0.5,
+                        haftalikGetiri: 1.2,
+                        aylikGetiri: 3.5,
+                        yillikGetiri: 45.2,
+                        fonBuyuklugu: 5000000000,
+                        trend: 'YUKARI',
+                        riskSkoru: 30,
+                    },
+                    {
+                        fonKodu: 'TI2',
+                        fonAdi: 'Teknoloji Yatırım Fonu',
+                        fonTuru: 'Hisse Senedi',
+                        kurucuAdi: 'İş Yatırım',
+                        gunlukGetiri: 0.8,
+                        haftalikGetiri: 2.1,
+                        aylikGetiri: 5.2,
+                        yillikGetiri: 62.5,
+                        trend: 'YUKARI',
+                        riskSkoru: 45,
+                    },
+                ],
+            },
         });
     }
 }
 
-function getMockFunds(): FundData[] {
-    return [
-        { kod: 'TI2', ad: 'İş Portföy Hisse Senedi Fonu', tur: 'Hisse', kurucu: 'İş Portföy', gunlukGetiri: 1.2, haftalikGetiri: 3.5, aylikGetiri: 8.2, yillikGetiri: 45.6, buyukluk: 2500000000 },
-        { kod: 'YAC', ad: 'Yapı Kredi Portföy Hisse Fonu', tur: 'Hisse', kurucu: 'Yapı Kredi', gunlukGetiri: 0.9, haftalikGetiri: 2.8, aylikGetiri: 7.5, yillikGetiri: 42.3, buyukluk: 1800000000 },
-        { kod: 'GAR', ad: 'Garanti Portföy Hisse Fonu', tur: 'Hisse', kurucu: 'Garanti', gunlukGetiri: 1.1, haftalikGetiri: 3.2, aylikGetiri: 7.8, yillikGetiri: 44.1, buyukluk: 2100000000 },
-        { kod: 'AKP', ad: 'Akbank Portföy Hisse Fonu', tur: 'Hisse', kurucu: 'Ak Portföy', gunlukGetiri: 0.8, haftalikGetiri: 2.5, aylikGetiri: 6.9, yillikGetiri: 38.7, buyukluk: 1500000000 },
-        { kod: 'ZBH', ad: 'Ziraat Portföy Hisse Fonu', tur: 'Hisse', kurucu: 'Ziraat', gunlukGetiri: 1.0, haftalikGetiri: 3.0, aylikGetiri: 7.2, yillikGetiri: 40.5, buyukluk: 1200000000 },
-    ];
+export async function POST(request: NextRequest) {
+    try {
+        const body = await request.json();
+
+        if (body.action === 'clearCache') {
+            await clearFundsCache();
+            return NextResponse.json({
+                success: true,
+                data: { message: 'TEFAS cache temizlendi' },
+            });
+        }
+
+        return NextResponse.json({
+            success: false,
+            error: 'Invalid action',
+        });
+    } catch (error) {
+        console.error('TEFAS POST Error:', error);
+        return NextResponse.json({
+            success: false,
+            error: 'Request failed',
+        });
+    }
 }

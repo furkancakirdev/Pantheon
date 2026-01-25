@@ -47,9 +47,9 @@ export class FmpClient {
 
             if (!response.ok) throw new Error(`FMP API Error: ${response.status}`);
 
-            const data = await response.json();
+            const data = await response.json() as FmpQuote[];
             if (Array.isArray(data) && data.length > 0) {
-                return data[0] as FmpQuote;
+                return data[0];
             }
             return null;
 
@@ -68,7 +68,7 @@ export class FmpClient {
             const url = `${BASE_URL}/stock_market/actives?apikey=${this.apiKey}`;
             const res = await fetch(url);
             if (!res.ok) throw new Error('FMP Error');
-            return await res.json();
+            return await res.json() as FmpQuote[];
         } catch (e) {
             return this.getMockActive();
         }

@@ -35,7 +35,7 @@ export class FredClient {
 
             if (!response.ok) throw new Error(`FRED API Error: ${response.status}`);
 
-            const data = await response.json();
+            const data = await response.json() as { observations: Array<{ date: string; value: string }> };
             if (data.observations && data.observations.length > 0) {
                 return {
                     date: data.observations[0].date,

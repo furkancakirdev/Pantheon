@@ -9,8 +9,8 @@
  * - Haber/Sentiment skoru
  */
 
-import type { StockFundamentals } from '../api-clients/isyatirim.js';
-import type { ErdincScore } from '../erdinc/rules.js';
+import type { StockFundamentals } from '@api/isyatirim';
+import type { ErdincScore } from '../erdinc/rules';
 
 /**
  * Global megatrendler

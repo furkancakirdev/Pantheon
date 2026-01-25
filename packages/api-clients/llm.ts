@@ -47,7 +47,7 @@ export class LlmClient {
                 });
 
                 if (response.ok) {
-                    const data = await response.json();
+                    const data = await response.json() as { choices: Array<{ message: { content: string } }> };
                     return {
                         text: data.choices[0].message.content,
                         model: 'Groq/Llama3',
@@ -73,7 +73,7 @@ export class LlmClient {
                 });
 
                 if (response.ok) {
-                    const data = await response.json();
+                    const data = await response.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
                     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
                     return {
                         text: text,

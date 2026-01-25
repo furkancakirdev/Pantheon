@@ -35,3 +35,18 @@ data/*.db
 data/*.sqlite
 
 /generated/prisma
+
+# Project specific
+.claude/
+.maestro/
+Argus-Terminal-main/
+ArgusTrailerPrompts/
+services/
+nul
+
+# Temp files
+*.txt
+API.txt
+"Yeni Metin Belgesi (2).txt"
+PANTHEON_*.md
+PANTHEON_*.txt

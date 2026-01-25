@@ -20,10 +20,12 @@ model Stock {
   sektor        String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
+
   fundamentals  Fundamental[]
   scores        Score[]
   alerts        Alert[]
+  analyses      Analysis[]
+  councilDecisions CouncilDecision[]
 }
 
 // Temel veriler (İş Yatırım API'den)
@@ -133,7 +135,7 @@ model Alert {
 
 model MarketSnapshot {
   id            Int       @id @default(autoincrement())
-  
+
   xu100         Float?
   xu100Degisim  Float?
   xu030         Float?
@@ -141,8 +143,146 @@ model MarketSnapshot {
   dolarTry      Float?
   euroTry       Float?
   altin         Float?
-  
+
   tarih         DateTime  @default(now())
-  
+
   @@index([tarih])
+}
+
+// ===== PORTFÖY YÖNETİMİ =====
+
+// Kullanıcı portföyleri
+model Portfolio {
+  id            String    @id @default(cuid())
+  isim          String    // Portföy adı (örn: "Ana Portföy", "BIST 100")
+  aciklama      String?   // Portföy açıklaması
+  bakiye        Float     @default(0) // Başlangıç bakiyesi (TL)
+  durum         String    @default("AKTIF") // AKTIF, PASIF, KAPALI
+
+  pozisyonlar    PortfolioPosition[]
+  islemler       PortfolioTransaction[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([durum])
+}
+
+// Portföy pozisyonları (hisseler)
+model PortfolioPosition {
+  id            String    @id @default(cuid())
+  portfolioId   String
+  portfolio     Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  hisseKod      String    // Hisse kodu (örn: THYAO)
+  hisseAd       String?   // Hisse adı
+
+  adet          Float     // Alınan/adet sayısı
+  alimFiyati    Float     // Ortalama alış fiyatı
+  toplamMaliyet  Float     // Toplam maliyet (adet * alış fiyatı)
+
+  guncelFiyat   Float?    // Güncel fiyat
+  guncelDeger   Float?    // Güncel değer (adet * güncel fiyat)
+  karZarar      Float?    // Kar/Zarar (TL)
+  karZararYuzde Float?    // Kar/Zarar %
+
+  alimTarihi    DateTime  @default(now())
+  satistami     Boolean   @default(false)
+  satisTarihi   DateTime?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([portfolioId])
+  @@index([hisseKod])
+  @@index([satistami])
+}
+
+// Portföy işlemleri (alış/satış geçmişi)
+model PortfolioTransaction {
+  id            String    @id @default(cuid())
+  portfolioId   String
+  portfolio     Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  hisseKod      String
+  islemTipi     String    // ALIS, SATIS
+  adet          Float
+  fiyat         Float     // İşlem fiyatı
+  toplam        Float     // İşlem tutarı
+
+  not           String?   // İşlem notu
+
+  createdAt     DateTime  @default(now())
+
+  @@index([portfolioId])
+  @@index([hisseKod])
+  @@index([createdAt])
+}
+
+// ===== İZLEME LİSTESİ (WATCHLIST) =====
+
+model Watchlist {
+  id            String    @id @default(cuid())
+  isim          String    // Liste adı (örn: "Favoriler", "Teknoloji")
+  aciklama      String?
+
+  ogeler        WatchlistItem[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model WatchlistItem {
+  id            String    @id @default(cuid())
+  watchlistId   String
+  watchlist     Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+
+  hisseKod      String    // Hisse kodu
+  hisseAd       String?   // Hisse adı
+  hedefFiyat    Float?    // Hedef fiyat
+  alarmFiyat    Float?    // Alarm fiyatı
+  notlar        String?   // Kullanıcı notları
+
+  eklenmeTarihi DateTime  @default(now())
+
+  @@unique([watchlistId, hisseKod])
+  @@index([watchlistId])
+  @@index([hisseKod])
+}
+
+// ===== GRAND COUNCIL =====
+
+// Her analiz motorunun ayrı ayrı sonuçları
+model Analysis {
+  id           String    @id @default(cuid())
+  stockKod     String
+  stock        Stock     @relation(fields: [stockKod], references: [kod], onDelete: Cascade)
+
+  moduleName   String    // Atlas, Orion, Wonderkid, Athena, Hermes, Aether, Phoenix
+  verdict      String    // GÜÇLÜ AL, AL, TUT, SAT, GÜÇLÜ SAT
+  confidence   Int       // 0-100
+  details      Json?     // Detaylı veri (checklist, indicator results, etc.)
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([stockKod, moduleName])
+  @@index([createdAt])
+}
+
+// Grand Council'nin nihai kararı
+model CouncilDecision {
+  id             String    @id @default(cuid())
+  stockKod       String
+  stock          Stock     @relation(fields: [stockKod], references: [kod], onDelete: Cascade)
+
+  finalVerdict   String    // AL, SAT, BEKLE
+  consensus      Int       // 0-100, oy birliği yüzdesi
+  votes          Json      // Tüm modül oyları
+  aiExplanation  String?   // LLM ile üretilen açıklama
+
+  createdAt      DateTime  @default(now())
+
+  @@index([stockKod])
+  @@index([createdAt])
 }
