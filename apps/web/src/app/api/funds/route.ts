@@ -3,6 +3,8 @@
  * Fon getirileri, analizi, filtreleme ve sıralama
  */
 
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import {
     fetchFundReturns,
@@ -12,7 +14,6 @@ import {
     selectBestFunds,
     getFonTurleri,
     getKurucular,
-    clearFundsCache,
     type FundAnalysis,
 } from '@api/tefas';
 
@@ -203,11 +204,11 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
 
+        // Cache temizme özelliği Redis olmadan devre dışı
         if (body.action === 'clearCache') {
-            await clearFundsCache();
             return NextResponse.json({
                 success: true,
-                data: { message: 'TEFAS cache temizlendi' },
+                data: { message: 'Cache temizleme devre dışı (Redis yok)' },
             });
         }
 

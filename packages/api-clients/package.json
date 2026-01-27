@@ -1,0 +1,17 @@
+{
+  "name": "@pantheon/api-clients",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./isyatirim": "./isyatirim.ts",
+    "./tefas": "./tefas.ts",
+    "./mynet": "./mynet.ts",
+    "./fmp": "./fmp.ts",
+    "./fred": "./fred.ts",
+    "./llm": "./llm.ts",
+    "./twitter": "./twitter.ts",
+    "./live-data": "./live-data.ts"
+  }
+}

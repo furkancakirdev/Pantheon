@@ -1,8 +1,10 @@
 /**
  * Market API - Mynet'ten canlı piyasa verileri
- * 
+ *
  * GET /api/market - Anlık endeks, döviz, emtia verileri
  */
+
+export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 

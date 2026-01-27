@@ -1,7 +1,7 @@
 /**
  * Analiz Motoru - Ana giriş noktası
  * Tüm analiz modüllerini bir araya getirir
- * 
+ *
  * Pantheon v2.0 Modülleri:
  * - Atlas V3 (Yaşar Erdinç + Genişletilmiş Temel Analiz)
  * - Orion V4 (Ali Perşembe + Kıvanç Özbilgiç Teknik)
@@ -13,10 +13,11 @@
  * - Cronos (Zamanlama Faktörü) [YENİ]
  * - Athena (Faktör Zekası) [YENİ]
  * - Poseidon (ETF/Emtia Modu) [YENİ]
+ * - Prometheus (Second-Order Thinking) [YENİ]
  */
 
-// Legacy exports
-import { fetchAllStocks, type StockFundamentals } from '@api/isyatirim';
+// Legacy exports (isyatirim import kaldırıldı - build sorunu için)
+// import { fetchAllStocks, type StockFundamentals } from '@api/isyatirim';
 import { hesaplaErdincSkor, skorlaVeSirala, raporFormatla, type ErdincScore } from './erdinc/rules';
 import { topWonderkids, wonderkidRapor, type WonderkidScore } from './wonderkid/engine';
 import { persembeAnaliz, type PersembeAnaliz } from './persembe/technical';
@@ -36,6 +37,9 @@ export * from './hermes/engine';
 export * from './phoenix/engine';
 export * from './council/grand-council';
 export * from './council/explanation';
+export * from './council/performance-tracker';
+export * from './council/conflict-detector';
+export * from './council/context-aware-voting';
 export * from './chiron/risk';
 export * from './cronos/engine';
 export * from './athena/engine';
@@ -44,6 +48,22 @@ export * from './pantheon/score';
 export * from './autopilot/engine';
 export * from './voice/engine';
 
+// US Stock Analysis
+export * from './us/growth-strategy';
+
+// OSINT Modules
+export * from './osint/github-pulse';
+export * from './osint/sikayetvar-scraper';
+export * from './osint/teias-consumption';
+
+// Prometheus Module (Second-Order Thinking)
+export * from './prometheus/types';
+export * from './prometheus/macro-scanner';
+export * from './prometheus/value-chain';
+export * from './prometheus/second-order';
+export * from './prometheus/risk-comparator';
+export * from './prometheus/index';
+
 // Named exports for easy access
 export { default as atlas } from './atlas/engine';
 export { default as orion } from './orion/engine';
@@ -51,6 +71,9 @@ export { default as aether } from './aether/engine';
 export { default as hermes } from './hermes/engine';
 export { default as phoenix } from './phoenix/engine';
 export { default as council } from './council/grand-council';
+export { getTracker, PerformanceTracker } from './council/performance-tracker';
+export { getConflictDetector, ConflictDetector, catismasiAnaliziEt } from './council/conflict-detector';
+export { baglamDuyarliOyla, contextAwareGrandCouncil, otomatikBaglamliOyla } from './council/context-aware-voting';
 export { default as chiron } from './chiron/risk';
 export { default as cronos } from './cronos/engine';
 export { default as athena } from './athena/engine';
@@ -58,6 +81,7 @@ export { default as poseidon } from './poseidon/engine';
 export { default as pantheonScore } from './pantheon/score';
 export { default as autopilot } from './autopilot/engine';
 export { default as voice } from './voice/engine';
+export { default as prometheus } from './prometheus/index';
 
 
 export interface AnalizRaporu {
@@ -70,10 +94,20 @@ export interface AnalizRaporu {
 
 /**
  * Tam analiz çalıştır
+ * Not: fetchAllStocks artık import edilmiyor, çağıran tarafından sağlanmalı
  */
-export async function tamAnaliz(): Promise<AnalizRaporu> {
+export async function tamAnaliz(hisseler: any[] = []): Promise<AnalizRaporu> {
     console.log('📊 Veri çekiliyor...');
-    const hisseler = await fetchAllStocks();
+    if (hisseler.length === 0) {
+        console.warn('⚠️ Hisse listesi boş, boş rapor döndürülüyor');
+        return {
+            tarih: new Date().toISOString(),
+            toplamHisse: 0,
+            erdincTop10: [],
+            wonderkidTop10: [],
+            ozet: 'Hisse verisi sağlanmadı',
+        };
+    }
     console.log(`✅ ${hisseler.length} hisse yüklendi`);
 
     console.log('\n🔍 Yaşar Erdinç analizi yapılıyor...');

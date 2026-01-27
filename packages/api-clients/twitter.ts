@@ -8,7 +8,7 @@
  * https://developer.twitter.com/en/docs/twitter-api/getting-started/about-twitter-api#v2-access
  */
 
-import { redis, CacheTTL } from '../db/redis.js';
+// Redis disabled - cache operations removed
 
 // === TYPES ===
 
@@ -211,20 +211,10 @@ class TwitterClient {
    * Kullanıcı bilgilerini getir
    */
   async getUserByUsername(username: string): Promise<TwitterUser | null> {
-    const cacheKey = `twitter:user:${username}`;
-
-    // Cache kontrol
-    const cached = await redis.get<TwitterUser>(cacheKey);
-    if (cached) return cached;
-
     // Mock veriden getir
     const user = FINANCIAL_TWITTER_ACCOUNTS.find(u =>
       u.username.toLowerCase() === username.toLowerCase()
     );
-
-    if (user) {
-      await redis.set(cacheKey, user, CacheTTL.ONE_DAY);
-    }
 
     return user || null;
   }
@@ -247,19 +237,11 @@ class TwitterClient {
    * Hisse senedi mention'larını ara
    */
   async searchBySymbol(symbol: string, count: number = 20): Promise<Tweet[]> {
-    const cacheKey = `twitter:search:${symbol}`;
-
-    // Cache kontrol
-    const cached = await redis.get<Tweet[]>(cacheKey);
-    if (cached) return cached;
-
     // Mock veriden ara
     const tweets = MOCK_TWEETS.filter(t =>
       t.mentionedSymbols?.some(s => s.toUpperCase() === symbol.toUpperCase()) ||
       t.text.toUpperCase().includes(`$${symbol.toUpperCase()}`)
     ).slice(0, count);
-
-    await redis.set(cacheKey, tweets, CacheTTL.FIVE_MINUTES);
 
     return tweets;
   }
@@ -268,16 +250,7 @@ class TwitterClient {
    * Tüm finansal tweet'leri getir
    */
   async getAllFinancialTweets(count: number = 50): Promise<Tweet[]> {
-    const cacheKey = 'twitter:all:financial';
-
-    // Cache kontrol
-    const cached = await redis.get<Tweet[]>(cacheKey);
-    if (cached) return cached;
-
     const tweets = MOCK_TWEETS.slice(0, count);
-
-    await redis.set(cacheKey, tweets, CacheTTL.FIVE_MINUTES);
-
     return tweets;
   }
 

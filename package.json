@@ -1,24 +1,32 @@
 {
-  "name": "investor-agent",
-  "version": "0.1.0",
-  "description": "Hibrit Yatırım Analiz Platformu - BIST, TEFAS, ABD Borsaları",
-  "main": "index.js",
+  "name": "pantheon-trading-os",
+  "version": "1.0.0",
+  "description": "Pantheon Trading OS - Hibrit Yatırım Analiz Platformu",
+  "private": true,
   "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "test": "vitest",
-    "fetch:isyatirim": "npx tsx packages/api-clients/isyatirim.ts",
-    "fetch:tefas": "npx tsx packages/api-clients/tefas.ts",
-    "analyze": "npx tsx packages/analysis/index.ts"
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=web",
+    "build": "turbo run build",
+    "build:web": "turbo run build --filter=web",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "analyze": "tsx packages/analysis/index.ts",
+    "fetch:isyatirim": "tsx packages/api-clients/isyatirim.ts",
+    "fetch:tefas": "tsx packages/api-clients/tefas.ts"
   },
   "keywords": [
     "bist",
     "tefas",
     "stock",
     "analysis",
-    "trading"
+    "trading",
+    "ai",
+    "grand-council"
   ],
   "author": "Furkan Çakır",
   "license": "MIT",
@@ -31,10 +39,16 @@
     "prisma": "^6.19.2",
     "ts-jest": "^29.4.6",
     "tsx": "^4.21.0",
+    "turbo": "^2.7.6",
     "typescript": "^5.9.3"
   },
   "dependencies": {
     "ioredis": "^5.9.2",
     "node-cron": "^4.2.1"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@9.15.0"
 }

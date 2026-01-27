@@ -4,11 +4,7 @@
  *
  * Kaynak: https://www.isyatirim.com.tr
  * Endpoint: POST /Data.aspx/HisseSenetleri
- *
- * Cache: Redis (1 saat TTL)
  */
-
-import { redis, CacheTTL } from '@db/redis';
 
 export interface StockFundamentals {
     kod: string;           // Hisse kodu (THYAO, ASELS, vb.)
@@ -36,15 +32,6 @@ const CACHE_KEY = 'isyatirim:stocks';
  * TTL: 1 saat
  */
 export async function fetchAllStocks(useCache: boolean = true): Promise<StockFundamentals[]> {
-    // Cache'ten dene
-    if (useCache) {
-        const cached = await redis.get<StockFundamentals[]>(CACHE_KEY);
-        if (cached) {
-            console.log('📦 İş Yatırım verileri cache\'ten geldi');
-            return cached;
-        }
-    }
-
     // API'den çek
     const response = await fetch(`${BASE_URL}/HisseSenetleri`, {
         method: 'POST',
@@ -62,9 +49,6 @@ export async function fetchAllStocks(useCache: boolean = true): Promise<StockFun
     const data = await response.json() as IsyatirimApiResponse;
     const stocks = data.d || [];
 
-    // Cache'e yaz
-    await redis.set(CACHE_KEY, stocks, CacheTTL.ONE_HOUR);
-
     return stocks;
 }
 
@@ -72,7 +56,7 @@ export async function fetchAllStocks(useCache: boolean = true): Promise<StockFun
  * İş Yatırım cache'ini temizler
  */
 export async function clearStocksCache(): Promise<void> {
-    await redis.del(CACHE_KEY);
+    // Cache temizleme - devre dışı
 }
 
 /**

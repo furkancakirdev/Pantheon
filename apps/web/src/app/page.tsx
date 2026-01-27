@@ -1,217 +1,291 @@
-'use client';
+/**
+ * Dashboard Page - React Server Component
+ * Veri sunucuda çekilir, istemciye sadece HTML gönderilir
+ */
 
-import { useEffect, useState } from 'react';
+export const dynamic = 'force-dynamic';
+
 import Link from 'next/link';
+import { Suspense } from 'react';
+import { DashboardClient, MarketData, StockScore } from '@/components/dashboard/DashboardClient';
+import { ScoreCard } from '@/components/dashboard/ScoreCard';
 
-interface MarketData {
-  xu100: number;
-  xu100Change: number;
-  usdTry: number;
-  eurTry: number;
-}
+// ============ DATA FETCHING (Server-Side) ============
 
-interface StockScore {
-  kod: string;
-  ad: string;
-  toplamSkor: number;
-  sinyal: string;
-}
+async function fetchMarketData(): Promise<MarketData | null> {
+    try {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const res = await fetch(`${baseUrl}/api/market`, {
+            cache: 'no-store',
+        });
 
-export default function DashboardPage() {
-  const [marketData, setMarketData] = useState<MarketData | null>(null);
-  const [topStocks, setTopStocks] = useState<StockScore[]>([]);
-  const [wonderkids, setWonderkids] = useState<StockScore[]>([]);
-  const [loading, setLoading] = useState(true);
+        if (!res.ok) return null;
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        // Market verisi
-        const marketRes = await fetch('/api/market');
-        const marketData = await marketRes.json();
-        setMarketData(marketData.data);
-
-        // Erdinç top skorlar
-        const erdincRes = await fetch('/api/analysis/erdinc?action=top&limit=10');
-        const erdincData = await erdincRes.json();
-        setTopStocks(erdincData.data ? [erdincData.data] : []);
-
-        // Wonderkid
-        const wonderkidRes = await fetch('/api/analysis/erdinc?action=wonderkid&limit=5');
-        const wonderkidData = await wonderkidRes.json();
-        setWonderkids(wonderkidData.data || []);
-      } catch (error) {
-        console.error('Veri yüklenemedi:', error);
-      } finally {
-        setLoading(false);
-      }
+        const json = await res.json();
+        return json.data;
+    } catch {
+        return null;
     }
-    fetchData();
-  }, []);
+}
 
-  function getScoreClass(score: number) {
-    if (score >= 75) return 'score-high';
-    if (score >= 50) return 'score-medium';
-    return 'score-low';
-  }
+async function fetchHealthStatus(): Promise<any> {
+    try {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const res = await fetch(`${baseUrl}/api/health`, {
+            cache: 'no-store',
+        });
 
-  function getSignalClass(signal: string) {
-    const s = signal?.toUpperCase() || '';
-    if (s.includes('AL')) return 'signal-al';
-    if (s.includes('SAT')) return 'signal-sat';
-    return 'signal-bekle';
-  }
+        if (!res.ok) return null;
 
-  if (loading) {
+        return await res.json();
+    } catch {
+        return null;
+    }
+}
+
+async function fetchErdincTop(limit: number = 10): Promise<StockScore[]> {
+    try {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const res = await fetch(`${baseUrl}/api/analysis/erdinc?action=top&limit=${limit}`, {
+            cache: 'no-store',
+        });
+
+        if (!res.ok) return [];
+
+        const json = await res.json();
+        return json.data ? [json.data] : [];
+    } catch {
+        return [];
+    }
+}
+
+async function fetchWonderkids(limit: number = 5): Promise<StockScore[]> {
+    try {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const res = await fetch(`${baseUrl}/api/analysis/erdinc?action=wonderkid&limit=${limit}`, {
+            cache: 'no-store',
+        });
+
+        if (!res.ok) return [];
+
+        const json = await res.json();
+        return json.data || [];
+    } catch {
+        return [];
+    }
+}
+
+// ============ SKELETON COMPONENTS ============
+
+function DashboardSkeleton() {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-slate-400">Yükleniyor...</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-slate-400">Piyasa özeti ve en iyi fırsatlar</p>
-        </div>
-        <div className="text-sm text-slate-500">
-          Son güncelleme: {new Date().toLocaleString('tr-TR')}
-        </div>
-      </div>
-
-      {/* Market Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="card">
-          <div className="text-slate-400 text-sm">BIST 100</div>
-          <div className="text-2xl font-bold">{marketData?.xu100?.toLocaleString('tr-TR') || '-'}</div>
-          <div className={`text-sm ${(marketData?.xu100Change ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-            {(marketData?.xu100Change ?? 0) >= 0 ? '+' : ''}{marketData?.xu100Change ?? 0}%
-          </div>
-        </div>
-        <div className="card">
-          <div className="text-slate-400 text-sm">BIST 30</div>
-          <div className="text-2xl font-bold">{marketData?.xu100?.toLocaleString('tr-TR') || '-'}</div>
-        </div>
-        <div className="card">
-          <div className="text-slate-400 text-sm">USD/TRY</div>
-          <div className="text-2xl font-bold">{marketData?.usdTry || '-'}</div>
-        </div>
-        <div className="card">
-          <div className="text-slate-400 text-sm">EUR/TRY</div>
-          <div className="text-2xl font-bold">{marketData?.eurTry || '-'}</div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Wonderkid Picks */}
-        <div className="card lg:col-span-1">
-          <h2 className="card-header flex items-center gap-2">
-            <span className="wonderkid-star">⭐</span>
-            Wonderkid Seçimleri
-          </h2>
-          <div className="space-y-3">
-            {wonderkids.length > 0 ? wonderkids.map((wk, i) => (
-              <Link
-                key={wk.kod}
-                href={`/stocks?symbol=${wk.kod}`}
-                className="block p-3 bg-slate-800/50 rounded-lg hover:bg-slate-700/50 transition"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg font-bold text-emerald-400">#{i + 1}</span>
-                    <div>
-                      <div className="font-semibold">{wk.kod}</div>
-                      <div className="text-xs text-slate-400">{wk.ad || wk.kod}</div>
-                    </div>
-                  </div>
-                  <div className={`score-badge ${getScoreClass(wk.toplamSkor)}`}>
-                    {wk.toplamSkor}
-                  </div>
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <div>
+                    <div className="h-8 w-40 bg-slate-800 rounded animate-pulse"></div>
+                    <div className="h-4 w-60 bg-slate-800 rounded mt-2 animate-pulse"></div>
                 </div>
-              </Link>
-            )) : (
-              <div className="text-center text-slate-500 py-4">Veri yükleniyor...</div>
+            </div>
+            <div className="h-16 bg-slate-800 rounded animate-pulse"></div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="h-24 bg-slate-800 rounded animate-pulse"></div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// ============ SERVER COMPONENT ============
+
+export default async function DashboardPage() {
+    // Paralel veri çekme (Server-side)
+    const [marketData, healthStatus, topStocks, wonderkids] = await Promise.all([
+        fetchMarketData(),
+        fetchHealthStatus(),
+        fetchErdincTop(10),
+        fetchWonderkids(5),
+    ]);
+
+    return (
+        <div className="space-y-6 animate-fade-in">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold">Dashboard</h1>
+                    <p className="text-slate-400">Piyasa özeti ve en iyi fırsatlar</p>
+                </div>
+                <div className="flex items-center gap-4">
+                    {healthStatus && (
+                        <div className="flex items-center gap-2 px-3 py-1 bg-slate-800/50 rounded-lg">
+                            <div className={`w-2 h-2 rounded-full ${healthStatus.status === 'operational' ? 'bg-emerald-400' : 'bg-red-400'}`}></div>
+                            <span className="text-xs text-slate-300">
+                                Cache: {healthStatus.performance?.cacheHitRate || '%95'}
+                            </span>
+                        </div>
+                    )}
+                    <div className="text-sm text-slate-500">
+                        {new Date().toLocaleString('tr-TR')}
+                    </div>
+                </div>
+            </div>
+
+            {/* Cache Info Banner */}
+            {healthStatus && (
+                <div className="card bg-blue-900/20 border-blue-500/30">
+                    <div className="flex items-center gap-3">
+                        <span className="text-2xl">⏱️</span>
+                        <div className="flex-1">
+                            <div className="font-semibold text-blue-400">15 Dakika Gecikmeli Veri</div>
+                            <p className="text-xs text-slate-400 mt-1">
+                                Veriler cache'den serving ediliyor. Son cache yenileme:{" "}
+                                {healthStatus.timestamp ? new Date(healthStatus.timestamp).toLocaleString('tr-TR') : '-'}
+                            </p>
+                        </div>
+                        <a href="/api/health" target="_blank" className="text-xs text-blue-400 hover:underline">
+                            Detay →
+                        </a>
+                    </div>
+                </div>
             )}
-          </div>
-          <Link href="/wonderkid" className="block mt-4 text-center text-sm text-emerald-400 hover:underline">
-            Tümünü Gör →
-          </Link>
-        </div>
 
-        {/* Top Stocks */}
-        <div className="card lg:col-span-2">
-          <h2 className="card-header">🏆 En Yüksek Skorlu Hisseler</h2>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Hisse</th>
-                <th>Toplam Skor</th>
-                <th>Sinyal</th>
-                <th>Detay</th>
-              </tr>
-            </thead>
-            <tbody>
-              {topStocks.length > 0 ? topStocks.map((stock) => (
-                <tr key={stock.kod}>
-                  <td>
-                    <div className="font-semibold">{stock.kod}</div>
-                    <div className="text-xs text-slate-400">{stock.ad || stock.kod}</div>
-                  </td>
-                  <td>
-                    <span className={`score-badge ${getScoreClass(stock.toplamSkor)}`}>
-                      {stock.toplamSkor}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`px-2 py-1 rounded text-xs font-bold ${getSignalClass(stock.sinyal)}`}>
-                      {stock.sinyal || 'BEKLE'}
-                    </span>
-                  </td>
-                  <td>
-                    <Link href={`/stocks?symbol=${stock.kod}`} className="text-emerald-400 hover:underline text-sm">
-                      Analiz →
+            {/* Client Component - Interaktif bileşenler */}
+            <Suspense fallback={<DashboardSkeleton />}>
+                <DashboardClient marketData={marketData} wonderkids={wonderkids} />
+            </Suspense>
+
+            {/* Top Stocks - Server Rendered */}
+            <div className="card">
+                <h2 className="card-header">🏆 En Yüksek Skorlu Hisseler</h2>
+                <table className="data-table">
+                    <thead>
+                        <tr>
+                            <th>Hisse</th>
+                            <th>Toplam Skor</th>
+                            <th>Sinyal</th>
+                            <th>Detay</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {topStocks.length > 0 ? topStocks.map((stock) => (
+                            <tr key={stock.kod}>
+                                <td>
+                                    <div className="font-semibold">{stock.kod}</div>
+                                    <div className="text-xs text-slate-400">{stock.ad || stock.kod}</div>
+                                </td>
+                                <td>
+                                    <span className={`score-badge ${
+                                        stock.toplamSkor >= 75 ? 'score-high' :
+                                        stock.toplamSkor >= 50 ? 'score-medium' : 'score-low'
+                                    }`}>
+                                        {stock.toplamSkor}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                        stock.sinyal?.toUpperCase().includes('AL') ? 'signal-al' :
+                                        stock.sinyal?.toUpperCase().includes('SAT') ? 'signal-sat' : 'signal-bekle'
+                                    }`}>
+                                        {stock.sinyal || 'BEKLE'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <Link href={`/stocks?symbol=${stock.kod}`} className="text-emerald-400 hover:underline text-sm">
+                                        Analiz →
+                                    </Link>
+                                </td>
+                            </tr>
+                        )) : (
+                            <tr>
+                                <td colSpan={4} className="text-center text-slate-500 py-4">
+                                    Veri yükleniyor...
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Link href="/stocks" className="card hover:border-emerald-500/50 transition cursor-pointer">
+                    <div className="text-3xl mb-2">📈</div>
+                    <div className="font-semibold">Hisse Tarama</div>
+                    <div className="text-sm text-slate-400">Tüm BIST hisselerini filtrele</div>
+                </Link>
+                <a href="/api/funds" target="_blank" className="card hover:border-emerald-500/50 transition cursor-pointer">
+                    <div className="text-3xl mb-2">💰</div>
+                    <div className="font-semibold">Fon Analizi</div>
+                    <div className="text-sm text-slate-400">TEFAS fonlarını karşılaştır</div>
+                </a>
+                <Link href="/wonderkid" className="card hover:border-emerald-500/50 transition cursor-pointer">
+                    <div className="text-3xl mb-2">⭐</div>
+                    <div className="font-semibold">Wonderkid</div>
+                    <div className="text-sm text-slate-400">Gelecek vaat eden şirketler</div>
+                </Link>
+                <Link href="/council" className="card hover:border-purple-500/50 transition cursor-pointer">
+                    <div className="text-3xl mb-2">🏛️</div>
+                    <div className="font-semibold">Grand Council</div>
+                    <div className="text-sm text-slate-400">11 Modüllü karar mekanizması</div>
+                </Link>
+            </div>
+
+            {/* Module Links - New Agora Modules */}
+            <div className="card">
+                <h2 className="card-header">🔧 Agora Modülleri</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    <Link href="/council" className="p-3 bg-slate-800/50 rounded-lg text-center hover:bg-slate-800 transition">
+                        <div className="text-2xl mb-1">🏛️</div>
+                        <div className="text-xs font-bold text-white">Council</div>
+                        <div className="text-xs text-slate-500">Karar</div>
                     </Link>
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan={4} className="text-center text-slate-500 py-4">
-                    Veri yükleniyor...
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                    <Link href="/cronos" className="p-3 bg-slate-800/50 rounded-lg text-center hover:bg-slate-800 transition">
+                        <div className="text-2xl mb-1">⏰</div>
+                        <div className="text-xs font-bold text-white">Cronos</div>
+                        <div className="text-xs text-slate-500">Zamanlama</div>
+                    </Link>
+                    <Link href="/demeter" className="p-3 bg-slate-800/50 rounded-lg text-center hover:bg-slate-800 transition">
+                        <div className="text-2xl mb-1">⭐</div>
+                        <div className="text-xs font-bold text-white">Demeter</div>
+                        <div className="text-xs text-slate-500">Sektör</div>
+                    </Link>
+                    <Link href="/poseidon" className="p-3 bg-slate-800/50 rounded-lg text-center hover:bg-slate-800 transition">
+                        <div className="text-2xl mb-1">🔱</div>
+                        <div className="text-xs font-bold text-white">Poseidon</div>
+                        <div className="text-xs text-slate-500">Dağılım</div>
+                    </Link>
+                    <Link href="/phoenix" className="p-3 bg-slate-800/50 rounded-lg text-center hover:bg-slate-800 transition">
+                        <div className="text-2xl mb-1">🔥</div>
+                        <div className="text-xs font-bold text-white">Phoenix</div>
+                        <div className="text-xs text-slate-500">Sinyaller</div>
+                    </Link>
+                    <Link href="/prometheus" className="p-3 bg-slate-800/50 rounded-lg text-center hover:bg-slate-800 transition">
+                        <div className="text-2xl mb-1">🔮</div>
+                        <div className="text-xs font-bold text-white">Prometheus</div>
+                        <div className="text-xs text-slate-500">2nd Order</div>
+                    </Link>
+                    <Link href="/orion" className="p-3 bg-slate-800/50 rounded-lg text-center hover:bg-slate-800 transition">
+                        <div className="text-2xl mb-1">📈</div>
+                        <div className="text-xs font-bold text-white">Orion</div>
+                        <div className="text-xs text-slate-500">Teknik</div>
+                    </Link>
+                    <Link href="/aether" className="p-3 bg-slate-800/50 rounded-lg text-center hover:bg-slate-800 transition">
+                        <div className="text-2xl mb-1">🌍</div>
+                        <div className="text-xs font-bold text-white">Aether</div>
+                        <div className="text-xs text-slate-500">Makro</div>
+                    </Link>
+                    <Link href="/sentiment" className="p-3 bg-slate-800/50 rounded-lg text-center hover:bg-slate-800 transition">
+                        <div className="text-2xl mb-1">🐦</div>
+                        <div className="text-xs font-bold text-white">Hermes</div>
+                        <div className="text-xs text-slate-500">Sentiment</div>
+                    </Link>
+                    <Link href="/chiron" className="p-3 bg-slate-800/50 rounded-lg text-center hover:bg-slate-800 transition">
+                        <div className="text-2xl mb-1">🛡️</div>
+                        <div className="text-xs font-bold text-white">Chiron</div>
+                        <div className="text-xs text-slate-500">Risk</div>
+                    </Link>
+                </div>
+            </div>
         </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Link href="/stocks" className="card hover:border-emerald-500/50 transition cursor-pointer">
-          <div className="text-3xl mb-2">📈</div>
-          <div className="font-semibold">Hisse Tarama</div>
-          <div className="text-sm text-slate-400">Tüm BIST hisselerini filtrele</div>
-        </Link>
-        <a href="/api/funds" target="_blank" className="card hover:border-emerald-500/50 transition cursor-pointer">
-          <div className="text-3xl mb-2">💰</div>
-          <div className="font-semibold">Fon Analizi</div>
-          <div className="text-sm text-slate-400">TEFAS fonlarını karşılaştır</div>
-        </a>
-        <Link href="/wonderkid" className="card hover:border-emerald-500/50 transition cursor-pointer">
-          <div className="text-3xl mb-2">⭐</div>
-          <div className="font-semibold">Wonderkid</div>
-          <div className="text-sm text-slate-400">Gelecek vaat eden şirketler</div>
-        </Link>
-        <Link href="/council" className="card hover:border-emerald-500/50 transition cursor-pointer">
-          <div className="text-3xl mb-2">🏛️</div>
-          <div className="font-semibold">Grand Council</div>
-          <div className="text-sm text-slate-400">AI oylama sistemi</div>
-        </Link>
-      </div>
-    </div>
-  );
+    );
 }

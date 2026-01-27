@@ -1,0 +1,11 @@
+{
+  "name": "@pantheon/sentiment",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./analyzer": "./analyzer.ts",
+    "./scraper": "./scraper.ts"
+  }
+}

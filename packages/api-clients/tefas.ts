@@ -13,8 +13,6 @@
  * - Sharpe oranı hesaplama
  */
 
-import { redis, CacheTTL } from '@db/redis';
-
 // ============ TİP TANIMLARI ============
 
 export interface FundReturn {
@@ -52,24 +50,13 @@ export type FonTuru =
     | 'Girişim Sermayesi';
 
 const BASE_URL = 'https://www.tefas.gov.tr/api/DB';
-const CACHE_KEY_FUNDS = 'tefas:funds';
-const CACHE_KEY_SIZES = 'tefas:sizes';
 
 // ============ API FONKSİYONLARI ============
 
 /**
- * Fon getirilerini çeker (Cache'li)
+ * Fon getirilerini çeker
  */
-export async function fetchFundReturns(useCache: boolean = true): Promise<FundReturn[]> {
-    // Cache'ten dene
-    if (useCache) {
-        const cached = await redis.get<FundReturn[]>(CACHE_KEY_FUNDS);
-        if (cached) {
-            console.log('📦 TEFAS fon verileri cache\'ten geldi');
-            return cached;
-        }
-    }
-
+export async function fetchFundReturns(): Promise<FundReturn[]> {
     const response = await fetch(`${BASE_URL}/BindComparisonFundReturns`, {
         method: 'POST',
         headers: {
@@ -86,26 +73,13 @@ export async function fetchFundReturns(useCache: boolean = true): Promise<FundRe
     }
 
     const data = await response.json() as TefasApiResponse;
-    const funds = data.data || [];
-
-    // Cache'e yaz (30 dakika)
-    await redis.set(CACHE_KEY_FUNDS, funds, CacheTTL.THIRTY_MINUTES);
-
-    return funds;
+    return data.data || [];
 }
 
 /**
- * Fon büyüklüklerini çeker (Cache'li)
+ * Fon büyüklüklerini çeker
  */
-export async function fetchFundSizes(useCache: boolean = true): Promise<Map<string, number>> {
-    if (useCache) {
-        const cached = await redis.get<Map<string, number>>(CACHE_KEY_SIZES);
-        if (cached) {
-            console.log('📦 TEFAS fon büyüklükleri cache\'ten geldi');
-            return new Map(Object.entries(cached as any));
-        }
-    }
-
+export async function fetchFundSizes(): Promise<Map<string, number>> {
     const response = await fetch(`${BASE_URL}/BindComparisonFundSizes`, {
         method: 'POST',
         headers: {
@@ -128,18 +102,7 @@ export async function fetchFundSizes(useCache: boolean = true): Promise<Map<stri
         }
     }
 
-    // Cache'e yaz
-    await redis.set(CACHE_KEY_SIZES, Object.fromEntries(sizeMap), CacheTTL.ONE_HOUR);
-
     return sizeMap;
-}
-
-/**
- * TEFAS cache'ini temizler
- */
-export async function clearFundsCache(): Promise<void> {
-    await redis.del(CACHE_KEY_FUNDS);
-    await redis.del(CACHE_KEY_SIZES);
 }
 
 // ============ FİLTRELEME VE SIRALAMA ============
@@ -350,7 +313,6 @@ export function getKurucular(funds: FundReturn[]): string[] {
 export default {
     fetchFundReturns,
     fetchFundSizes,
-    clearFundsCache,
     filterByFundType,
     filterByFounder,
     filterByReturnRange,

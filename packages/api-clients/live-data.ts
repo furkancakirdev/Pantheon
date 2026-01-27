@@ -5,10 +5,7 @@
  * - Canlı fiyat güncellemeleri (SSE/WebSocket simülasyonu)
  * - Portföy takibi
  * - Real-time sinyal bildirimleri
- * - Cache yönetimi
  */
-
-import { redis, CacheTTL } from '@db/redis';
 
 // ============ TİP TANIMLARI ============
 
@@ -77,20 +74,8 @@ class LiveDataService {
      * Tek bir hissenin canlı fiyatını al
      */
     public async getLiveQuote(symbol: string): Promise<LiveQuote | null> {
-        const cacheKey = `live:quote:${symbol}`;
-
-        // Önce cache'ten dene (1 dakika geçerli)
-        const cached = await redis.get<LiveQuote>(cacheKey);
-        if (cached) {
-            return cached;
-        }
-
         // Mock canlı fiyat (gerçek API entegrasyonu yapılacak)
         const quote = this.generateMockQuote(symbol);
-
-        // Cache'e yaz (1 dakika)
-        await redis.set(cacheKey, quote, CacheTTL.ONE_MINUTE);
-
         return quote;
     }
 
@@ -193,21 +178,12 @@ class LiveDataService {
 
         this.updateInterval = setInterval(async () => {
             for (const symbol of symbols) {
-                // Yeni fiyat üret (simülasyon)
-                const update = this.generateMockUpdate(symbol);
-
                 // Abonelere gönder
                 const subs = this.subscribers.get(symbol);
                 const quote = await this.getLiveQuote(symbol);
 
                 if (subs && subs.size > 0 && quote) {
                     subs.forEach(cb => cb(quote));
-                }
-
-                // Cache'i güncelle
-                if (quote) {
-                    const cacheKey = `live:quote:${symbol}`;
-                    await redis.set(cacheKey, quote, CacheTTL.ONE_MINUTE);
                 }
             }
         }, intervalMs);
@@ -326,11 +302,7 @@ class LiveDataService {
      * Canlı veri cache'ini temizle
      */
     public async clearCache(symbol?: string): Promise<void> {
-        if (symbol) {
-            await redis.del(`live:quote:${symbol}`);
-        } else {
-            await redis.delPattern('live:quote:*');
-        }
+        // Cache temizleme - devre dışı
     }
 }
 
