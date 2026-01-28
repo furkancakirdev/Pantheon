@@ -40,12 +40,11 @@ export async function GET(request: NextRequest) {
     if (action === 'analyze') {
       // Tek hisse analizi
       const candles = getMockCandles(symbol.toUpperCase());
-      const result = phoenixEngine.analyzeStock(symbol.toUpperCase(), candles);
+      const result = phoenixEngine.analyze(symbol.toUpperCase(), candles);
 
       return NextResponse.json({
         success: true,
         data: {
-          symbol: symbol.toUpperCase(),
           ...result,
         },
       });

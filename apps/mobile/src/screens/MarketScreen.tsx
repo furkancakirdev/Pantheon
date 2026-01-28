@@ -95,6 +95,9 @@ export const MarketScreen: React.FC = () => {
   const { market, loading: marketLoading, refresh: refreshMarket } = useMarket();
   const { macro, loading: aetherLoading, refresh: refreshAether } = useAether();
 
+  // Combined loading state
+  const isLoading = signalsLoading || marketLoading || aetherLoading;
+
   // Pull-to-refresh
   const refreshAll = useCallback(async () => {
     await Promise.all([
@@ -152,7 +155,7 @@ export const MarketScreen: React.FC = () => {
   ), [macro, market, signals.length]);
 
   // Loading state
-  if (signalsLoading && signals.length === 0) {
+  if (isLoading && signals.length === 0) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.content}>
@@ -160,6 +163,22 @@ export const MarketScreen: React.FC = () => {
             <AetherHUDCard macro={macro} />
           </View>
           <LoadingState />
+        </View>
+      </View>
+    );
+  }
+
+  // Error state
+  if (error && signals.length === 0) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorIcon}>⚠️</Text>
+          <Text style={styles.errorTitle}>Veri Yükleme Hatası</Text>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={refreshAll}>
+            <Text style={styles.retryButtonText}>Yeniden Dene</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -382,6 +401,28 @@ const styles = StyleSheet.create({
     ...Theme.typography.body,
     fontWeight: '600',
     color: '#000',
+  },
+  // Error Container
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Theme.spacing.xLarge,
+  },
+  errorIcon: {
+    fontSize: 64,
+    marginBottom: Theme.spacing.large,
+  },
+  errorTitle: {
+    ...Theme.typography.h3,
+    fontWeight: '700',
+    marginBottom: Theme.spacing.small,
+  },
+  errorText: {
+    ...Theme.typography.body,
+    color: Theme.colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: Theme.spacing.xLarge,
   },
   // Filter Bar
   filterBar: {

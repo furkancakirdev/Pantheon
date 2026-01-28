@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "5659e372-4ea1-4b3c-927f-544a55c13137"
+      }
+    },
+    "android": {
+      "package": "Pantheon.OS"
+    }
+  }
+}

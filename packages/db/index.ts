@@ -4,11 +4,11 @@
  * Prisma client ve Redis cache export
  */
 
-import { redis } from './redis.js';
-export { redis, RedisClient, Cache, CacheInvalidate, CacheTTL } from './redis.js';
+import { redis } from './redis';
+export { redis, RedisClient, Cache, CacheInvalidate, CacheTTL } from './redis';
 
 // Prisma client'ı da export et
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, type Prisma } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
@@ -22,7 +22,9 @@ if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }
 
-export * from '@prisma/client';
+// Explicitly export Prisma types and client instead of export *
+export { PrismaClient };
+export type { Prisma };
 
 export default {
   redis,

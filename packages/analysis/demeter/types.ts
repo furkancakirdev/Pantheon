@@ -151,15 +151,15 @@ export interface DemeterResult {
   /** Piyasa fazı */
   marketPhase: MarketPhase;
   /** Sektör verileri */
-  sectors: SectorData[];
+  sectors: Array<SectorData & { score: number }>;
   /** Sektör rotasyonu */
   rotation: SectorRotation;
   /** Faz analizi */
   phaseAnalysis: PhaseAnalysis;
   /** En güçlü sektörler */
-  topSectors: SectorData[];
+  topSectors: Array<SectorData & { score: number }>;
   /** En zayıf sektörler */
-  bottomSectors: SectorData[];
+  bottomSectors: Array<SectorData & { score: number }>;
   /** Sinyaller */
   signals: SectorSignal[];
   /** Detaylar */
@@ -382,7 +382,7 @@ export function generateSummary(
 
   if (rotation.rotateIn.length > 0) {
     const rotateInNames = rotation.rotateIn
-      .map(s => sectors.find(x => x.code === s)?.name || s)
+      .map(s => SECTORS.find(x => x.code === s)?.name || s)
       .slice(0, 2)
       .join(', ');
     parts.push(`Öneri: ${rotateInNames} ağırlık artır.`);
@@ -425,7 +425,7 @@ export const SECTORS: SectorInfo[] = [
   {
     code: 'GYNA',
     name: 'Gıda',
-    phase: ['RECESSION', 'DEFENSIVE'],
+    phase: ['RECESSION', 'RECESSION'],
     isDefensive: true,
     isCyclical: false,
     beta: 0.6,
@@ -549,19 +549,6 @@ export const getSectorName = (code: SectorCode): string => {
 // ============ EXPORTS ============
 
 export default {
-  SectorCode,
-  SectorTrend,
-  SectorPhase,
-  MarketPhase,
-  SectorData,
-  SectorSignal,
-  SectorRotation,
-  PhaseAnalysis,
-  DemeterResult,
-  DemeterOpinion,
-  SectorInfo,
-  IndexData,
-  Verdict,
   getLetterGrade,
   getVerdict,
   verdictToAction,

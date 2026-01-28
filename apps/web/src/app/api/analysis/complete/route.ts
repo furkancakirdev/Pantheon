@@ -366,7 +366,7 @@ export async function GET(request: NextRequest) {
         // Varlık tipi tespiti
         const poseidon = PoseidonEngine.getInstance();
         const varlikTipi: AssetType = poseidon.detectAssetType(symbolUpper);
-        const poseidonResult: PoseidonResult = poseidon.calculateScore(varlikTipi, {});
+        const poseidonResult: PoseidonResult = await poseidon.analyze('BALANCED');
 
         // 1. Orion (Teknik)
         const orionEngine = OrionEngine.getInstance();
@@ -410,7 +410,7 @@ export async function GET(request: NextRequest) {
             aetherGorus(aetherRegime, 14.5),
             phoenixGorus(phoenixMatch, 'Momentum Scan'),
             cronosGorus(cronosResult),
-            poseidonGorus(varlikTipi, poseidonResult.reasoning),
+            poseidonGorus(varlikTipi, poseidonResult.details.join(', ')),
             chironGorus(2.0, { [asset.sector]: 35 }, true),
         ];
 

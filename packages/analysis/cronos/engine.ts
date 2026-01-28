@@ -395,7 +395,7 @@ export class CronosEngine {
     }
 
     // Bilanço öncesi
-    if (EARNINGS_MONTHS.includes((month + 1) % 12)) {
+    if (EARNINGS_MONTHS.includes(((month + 1) % 12) as 0 | 3 | 6 | 9)) {
       return { score: EARNINGS_SCORES.preEarnings, description: 'Bilanço öncesi - beklenti dönemi' };
     }
 
@@ -462,6 +462,9 @@ export class CronosEngine {
  * Singleton instance
  */
 export const cronosEngine = CronosEngine.getInstance();
+
+// Re-export types for convenience
+export type { CronosResult } from './types';
 
 // Convenience functions
 export function analyzeTiming(date?: Date): CronosResult {

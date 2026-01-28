@@ -1,0 +1,71 @@
+{
+  "buildCommand": "pnpm build:web",
+  "outputDirectory": "apps/web/.next",
+  "installCommand": "pnpm install",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "env": {
+    "NEXT_PUBLIC_APP_URL": {
+      "description": "Uygulamanın production URL'si"
+    },
+    "DATABASE_URL": {
+      "description": "PostgreSQL veritabanı bağlantı URL'si (Production için zorunlu)",
+      "value": ""
+    },
+    "FRED_API_KEY": {
+      "description": "FRED API Key - Makro Analiz (Aether) için zorunlu"
+    },
+    "FMP_API_KEY": {
+      "description": "FMP API Key - Global Finans (Atlas/Orion) için zorunlu"
+    },
+    "GROQ_API_KEY": {
+      "description": "Groq API Key - Hızlı Inference (Hermes Sentiment) için opsiyonel"
+    },
+    "GEMINI_API_KEY": {
+      "description": "Google Gemini API Key - Analiz ve Yorumlama (Grand Council) için opsiyonel"
+    },
+    "NODE_ENV": {
+      "description": "Node.js environment",
+      "value": "production"
+    }
+  },
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_APP_URL": "@app-url",
+      "DATABASE_URL": "@database-url",
+      "FRED_API_KEY": "@fred-api-key",
+      "FMP_API_KEY": "@fmp-api-key",
+      "GROQ_API_KEY": "@groq-api-key",
+      "GEMINI_API_KEY": "@gemini-api-key"
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Credentials",
+          "value": "true"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    }
+  ]
+}

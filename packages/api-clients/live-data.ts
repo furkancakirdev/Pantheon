@@ -59,7 +59,7 @@ class LiveDataService {
     private static instance: LiveDataService;
     private subscribers: Map<string, Set<(quote: LiveQuote) => void>> = new Map();
     private portfolioSubscribers: Set<(snapshot: PortfolioSnapshot) => void> = new Set();
-    private updateInterval: NodeJS.Timeout | null = null;
+    private updateInterval: ReturnType<typeof setInterval> | null = null;
 
     private constructor() {}
 

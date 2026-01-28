@@ -1,2 +1,5 @@
-export * from './engine.js';
-export { default as athena } from './engine.js';
+/**
+ * Athena - Faktör Zekası Motoru
+ */
+
+export * from './engine';

@@ -365,21 +365,6 @@ export function generateSummary(
 // ============ EXPORTS ============
 
 export default {
-  PhoenixSignalType,
-  SignalDirection,
-  PhoenixSignal,
-  PriceLevel,
-  RiskLevel,
-  Verdict,
-  PhoenixMode,
-  Recommendation,
-  PhoenixResult,
-  PhoenixOpinion,
-  PhoenixScanResult,
-  PhoenixCandidate,
-  PhoenixReport,
-  PortfolioMonitorResult,
-  Candle,
   getLetterGrade,
   getVerdict,
   verdictToAction,

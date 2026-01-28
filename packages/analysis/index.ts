@@ -57,11 +57,7 @@ export * from './osint/sikayetvar-scraper';
 export * from './osint/teias-consumption';
 
 // Prometheus Module (Second-Order Thinking)
-export * from './prometheus/types';
-export * from './prometheus/macro-scanner';
-export * from './prometheus/value-chain';
 export * from './prometheus/second-order';
-export * from './prometheus/risk-comparator';
 export * from './prometheus/index';
 
 // Named exports for easy access

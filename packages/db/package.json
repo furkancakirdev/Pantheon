@@ -9,6 +9,7 @@
     "./stock-registry": "./stock-registry.ts"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.2",
     "ioredis": "^5.9.2"
   }
 }

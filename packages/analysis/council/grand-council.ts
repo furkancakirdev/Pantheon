@@ -175,10 +175,10 @@ export function wonderkidGorus(skor: WonderkidScore): ModulGorus {
 // 3. Orion V3 (Gelismis Teknik)
 export function orionOyu(skor: OrionResult): ModulOyu {
     let oy: OyTipi = 'BEKLE';
-    let guven = skor.score;
+    let guven = skor.totalScore;
 
-    if (skor.score >= 70) oy = 'AL';
-    else if (skor.score <= 30) oy = 'SAT';
+    if (skor.totalScore >= 70) oy = 'AL';
+    else if (skor.totalScore <= 30) oy = 'SAT';
 
     const firstDetail = skor.details?.[0] || '';
     const kivancSignal = `${skor.kivanc?.alphaTrend}/${skor.kivanc?.most}/${skor.kivanc?.mavilimW}`;
@@ -188,7 +188,7 @@ export function orionOyu(skor: OrionResult): ModulOyu {
         oy,
         guven,
         icon: '📈',
-        aciklama: `Skor: ${skor.score}. ${kivancSignal}. ${firstDetail}`,
+        aciklama: `Skor: ${skor.totalScore}. ${kivancSignal}. ${firstDetail}`,
     };
 }
 
@@ -200,8 +200,8 @@ export function orionGorus(skor: OrionResult): ModulGorus {
         icon: '📈',
         oy: oy.oy,
         guven: oy.guven,
-        sinyal: skor.score >= 70 ? 'GÜÇLÜ AL' : skor.score <= 30 ? 'SAT' : 'BEKLE',
-        gorus: `Teknik skor ${skor.score}/100. ` +
+        sinyal: skor.totalScore >= 70 ? 'GÜÇLÜ AL' : skor.totalScore <= 30 ? 'SAT' : 'BEKLE',
+        gorus: `Teknik skor ${skor.totalScore}/100. ` +
             `Kivanc indikatorleri: ` +
             `AlphaTrend=${kivanc?.alphaTrend || 'N/A'}, ` +
             `MOST=${kivanc?.most || 'N/A'}, ` +
@@ -218,17 +218,23 @@ export function athenaV2Oyu(analiz: AthenaResult): ModulOyu {
     if (analiz.score >= 70) oy = 'AL';
     else if (analiz.score <= 40) oy = 'SAT';
 
+    const verdict = analiz.score >= 70 ? 'GÜÇLÜ AL' : analiz.score >= 50 ? 'TUT' : 'SAT';
+
     return {
         modul: 'Athena V2',
         oy,
         guven,
         icon: '🦉',
-        aciklama: `Skor: ${analiz.score}. Style: ${analiz.styleLabel}. ${analiz.verdict}`,
+        aciklama: `Skor: ${analiz.score}. Style: ${analiz.dominantFactor}. ${verdict}`,
     };
 }
 
 export function athenaV2Gorus(analiz: AthenaResult): ModulGorus {
     const oy = athenaV2Oyu(analiz);
+
+    // Faktörleri string formatına çevir
+    const factorsStr = analiz.factors.map(f => `${f.name} ${f.score}`).join(', ');
+
     return {
         modul: 'Athena V2 (Faktör Zekası)',
         icon: '🦉',
@@ -236,9 +242,8 @@ export function athenaV2Gorus(analiz: AthenaResult): ModulGorus {
         guven: oy.guven,
         sinyal: analiz.score >= 70 ? 'FAKTÖR PROFİLİ GÜÇLÜ' :
                  analiz.score <= 40 ? 'FAKTÖR PROFİLİ ZAYIF' : 'NÖTR FAKTÖR PROFİLİ',
-        gorus: `Smart Beta skoru ${analiz.score}/100. Style: ${analiz.styleLabel} (${analiz.styleDescription}). ` +
-            `Faktörler: Value ${analiz.factors.value}/100, Quality ${analiz.factors.quality}/100, ` +
-            `Momentum ${analiz.factors.momentum}/100. ` +
+        gorus: `Smart Beta skoru ${analiz.score}/100. Style: ${analiz.dominantFactor} (${analiz.smartMoneyFit}). ` +
+            `Faktörler: ${factorsStr}. ` +
             `${analiz.summary}`
     };
 }
@@ -383,7 +388,10 @@ export function poseidonGorus(varlikTipi: AssetType, aciklama: string): ModulGor
         'ETF': '📊',
         'EMTIA': '💰',
         'KRIPTO': '₿',
-        'FON': '💎'
+        'FON': '💎',
+        'TAHVIL': '📜',
+        'NAKIT': '💵',
+        'ALTIN': '🏅'
     };
 
     return {

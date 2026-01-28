@@ -103,8 +103,8 @@ export class MarketDataWebSocket extends EventEmitter {
     private config: Required<WebSocketConfig>;
     private state: ConnectionState = ConnectionState.DISCONNECTED;
     private subscriptions: Set<string> = new Set();
-    private reconnectTimer: NodeJS.Timeout | null = null;
-    private heartbeatTimer: NodeJS.Timeout | null = null;
+    private reconnectTimer: ReturnType<typeof setInterval> | null = null;
+    private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
     private reconnectAttempts = 0;
     private stats: ConnectionStats = {
         state: ConnectionState.DISCONNECTED,

@@ -11,10 +11,17 @@
             "distribution": "internal",
             "android": {
                 "buildType": "apk"
+            },
+            "env": {
+                "EXPO_PUBLIC_API_URL": "https://pantheon.vercel.app/api"
             }
         },
         "production": {
-            "node": "18.x"
+            "node": "18.x",
+            "env": {
+                "EXPO_PUBLIC_API_URL": "https://pantheon.vercel.app/api",
+                "NODE_ENV": "production"
+            }
         }
     },
     "submit": {

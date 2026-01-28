@@ -79,7 +79,7 @@ export function useMarketStream(
     const [messageCount, setMessageCount] = useState(0);
 
     const eventSourceRef = useRef<EventSource | null>(null);
-    const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const reconnectAttemptsRef = useRef(0);
     const symbolsRef = useRef(symbols);
 

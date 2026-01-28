@@ -230,6 +230,7 @@ export const PortfolioScreen: React.FC = () => {
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
   const [selectedPortfolio, setSelectedPortfolio] = useState<Portfolio | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
 
@@ -237,16 +238,24 @@ export const PortfolioScreen: React.FC = () => {
   const fetchPortfolios = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch('http://192.168.1.122:3000/api/portfolio');
+      if (!response.ok) {
+        throw new Error('Portföy verisi alınamadı');
+      }
       const json = await response.json();
       if (json.success) {
         setPortfolios(json.data);
         if (json.data.length > 0 && !selectedPortfolio) {
           setSelectedPortfolio(json.data[0]);
         }
+      } else {
+        throw new Error(json.error || 'Bilinmeyen hata');
       }
-    } catch (error) {
-      console.error('Portfolio fetch error:', error);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Bilinmeyen hata';
+      setError(errorMessage);
+      console.error('Portfolio fetch error:', err);
     } finally {
       setLoading(false);
     }
@@ -304,6 +313,21 @@ export const PortfolioScreen: React.FC = () => {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <Text style={styles.loadingText}>Yükleniyor...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorIcon}>⚠️</Text>
+          <Text style={styles.errorTitle}>Hata</Text>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={fetchPortfolios}>
+            <Text style={styles.retryButtonText}>Yeniden Dene</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -784,6 +808,39 @@ const styles = StyleSheet.create({
   modalButtonText: {
     ...Theme.typography.body,
     fontWeight: '600',
+  },
+  // Error Container
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Theme.spacing.xLarge,
+  },
+  errorIcon: {
+    fontSize: 64,
+    marginBottom: Theme.spacing.large,
+  },
+  errorTitle: {
+    ...Theme.typography.h3,
+    fontWeight: '700',
+    marginBottom: Theme.spacing.small,
+  },
+  errorText: {
+    ...Theme.typography.body,
+    color: Theme.colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: Theme.spacing.xLarge,
+  },
+  retryButton: {
+    backgroundColor: Theme.colors.accent,
+    paddingHorizontal: Theme.spacing.xLarge,
+    paddingVertical: Theme.spacing.medium,
+    borderRadius: Theme.radius.medium,
+  },
+  retryButtonText: {
+    ...Theme.typography.body,
+    fontWeight: '700',
+    color: '#FFF',
   },
 });
 

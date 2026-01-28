@@ -143,8 +143,8 @@ export async function GET(request: NextRequest) {
     // ReadableStream oluştur
     const stream = new ReadableStream({
         async start(controller) {
-            let intervalId: NodeJS.Timeout | null = null;
-            let heartbeatId: NodeJS.Timeout | null = null;
+            let intervalId: ReturnType<typeof setInterval> | null = null;
+            let heartbeatId: ReturnType<typeof setInterval> | null = null;
 
             // Başlangıç mesajı
             const startMessage: StreamMessage = {

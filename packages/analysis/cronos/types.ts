@@ -34,7 +34,7 @@ export interface CronosFactor {
 /**
  * Karar Tipi
  */
-export type Verdict = 'GÜÇLÜ POZİTİF' | 'POZİTİF' | 'NÖTR' | 'NEGATİF' | 'GÜÇLÜ NEGATİF';
+export type Verdict = 'GÜÇLÜ POZİTİF' | 'POZİTİF' | 'NOTR' | 'NEGATİF' | 'GÜÇLÜ NEGATİF';
 
 // ============ ANALİZ SONUCU ============
 
@@ -141,7 +141,7 @@ export function getLetterGrade(score: number): 'A' | 'B' | 'C' | 'D' | 'F' {
 export function getVerdict(score: number): Verdict {
   if (score >= 75) return 'GÜÇLÜ POZİTİF';
   if (score >= 60) return 'POZİTİF';
-  if (score >= 45) return 'NÖTR';
+  if (score >= 45) return 'NOTR';
   if (score >= 30) return 'NEGATİF';
   return 'GÜÇLÜ NEGATİF';
 }
@@ -160,7 +160,7 @@ export function verdictToAction(verdict: Verdict): 'buy' | 'sell' | 'hold' {
  */
 export function getTimingType(score: number): TimingType {
   if (score >= 65) return 'UYGUN';
-  if (score >= 45) return 'NÖTR';
+  if (score >= 45) return 'NOTR';
   return 'UYGUNSUZ';
 }
 
@@ -222,7 +222,7 @@ export function generateSummary(
 
   if (timing === 'UYGUN') {
     parts.push('Zamanlama uygun. İşlem yapılabilir.');
-  } else if (timing === 'NÖTR') {
+  } else if (timing === 'NOTR') {
     parts.push('Zamanlama nötr. Dikkatli olun.');
   } else {
     parts.push('Zamanlama uygun değil. Beklemek önerilir.');
@@ -281,14 +281,6 @@ export function getMarketHourInfo(date: Date): MarketHourInfo {
 // ============ EXPORTS ============
 
 export default {
-  TimingType,
-  TimingRecommendation,
-  CronosFactor,
-  Verdict,
-  CronosResult,
-  CronosOpinion,
-  TimingDetail,
-  MarketHourInfo,
   getLetterGrade,
   getVerdict,
   verdictToAction,

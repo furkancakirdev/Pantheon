@@ -154,6 +154,9 @@ model MarketSnapshot {
 // Kullanıcı portföyleri
 model Portfolio {
   id            String    @id @default(cuid())
+  userId        String?   // Kullanıcı ID (opsiyonel - legacy support için)
+  user          User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   isim          String    // Portföy adı (örn: "Ana Portföy", "BIST 100")
   aciklama      String?   // Portföy açıklaması
   bakiye        Float     @default(0) // Başlangıç bakiyesi (TL)
@@ -166,6 +169,7 @@ model Portfolio {
   updatedAt     DateTime  @updatedAt
 
   @@index([durum])
+  @@index([userId])
 }
 
 // Portföy pozisyonları (hisseler)
@@ -223,6 +227,9 @@ model PortfolioTransaction {
 
 model Watchlist {
   id            String    @id @default(cuid())
+  userId        String?   // Kullanıcı ID (opsiyonel - legacy support için)
+  user          User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   isim          String    // Liste adı (örn: "Favoriler", "Teknoloji")
   aciklama      String?
 
@@ -230,6 +237,8 @@ model Watchlist {
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
 }
 
 model WatchlistItem {
@@ -248,6 +257,41 @@ model WatchlistItem {
   @@unique([watchlistId, hisseKod])
   @@index([watchlistId])
   @@index([hisseKod])
+}
+
+// ===== KULLANICI VE AUTHENTICATION =====
+
+model User {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  email        String    @unique
+  passwordHash String
+  name         String?
+  emailVerified Boolean  @default(false)
+
+  portfolios   Portfolio[]
+  watchlists   Watchlist[]
+  sessions     Session[]
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([email])
+  @@index([username])
+}
+
+model Session {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  token        String    @unique
+  expiresAt    DateTime
+
+  createdAt    DateTime  @default(now())
+
+  @@index([userId])
+  @@index([token])
 }
 
 // ===== GRAND COUNCIL =====

@@ -13,7 +13,7 @@ import { HOLIDAYS, EARNINGS_MONTHS, QUARTER_END_MONTHS } from '../config';
  */
 export async function fetchHolidays(): Promise<Array<{ month: number; day: number; name: string }>> {
   // Gerçek API entegrasyonu yakında eklenecek
-  return HOLIDAYS;
+  return [...HOLIDAYS];
 }
 
 /**
@@ -21,7 +21,7 @@ export async function fetchHolidays(): Promise<Array<{ month: number; day: numbe
  */
 export async function fetchEarningsMonths(): Promise<number[]> {
   // Gerçek API entegrasyonu yakında eklenecek
-  return EARNINGS_MONTHS;
+  return [...EARNINGS_MONTHS];
 }
 
 /**
@@ -29,7 +29,7 @@ export async function fetchEarningsMonths(): Promise<number[]> {
  */
 export async function fetchQuarterEndMonths(): Promise<number[]> {
   // Gerçek API entegrasyonu yakında eklenecek
-  return QUARTER_END_MONTHS;
+  return [...QUARTER_END_MONTHS];
 }
 
 /**

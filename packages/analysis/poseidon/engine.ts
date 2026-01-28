@@ -714,6 +714,9 @@ export class PoseidonEngine {
  */
 export const poseidonEngine = PoseidonEngine.getInstance();
 
+// Re-export types for convenience
+export type { AssetType, PoseidonResult } from './types';
+
 // Convenience functions
 export async function analyzeAssetAllocation(
   riskProfile?: RiskProfile,

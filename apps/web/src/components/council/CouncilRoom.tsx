@@ -416,6 +416,26 @@ export function CouncilRoom({
     const [selectedModul, setSelectedModul] = useState<string | null>(null);
     const [activeBubble, setActiveBubble] = useState<string | null>(null);
     const [rotatingBubbles, setRotatingBubbles] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Fetch council data
+    const fetchCouncilData = async () => {
+        if (!symbol) return;
+        setLoading(true);
+        setError(null);
+        try {
+            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+            const res = await fetch(`${baseUrl}/api/analysis/council?symbol=${symbol}`, {
+                cache: 'no-store',
+            });
+            if (!res.ok) throw new Error('Council verisi alınamadı');
+            setLoading(false);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Bilinmeyen hata');
+            setLoading(false);
+        }
+    };
 
     // Otomatik konuşma balonu rotasyonu
     React.useEffect(() => {
@@ -435,6 +455,33 @@ export function CouncilRoom({
 
     return (
         <div className={styles.container}>
+            {/* Loading State */}
+            {loading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 z-50">
+                    <div className="text-center">
+                        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                        <p className="text-slate-300">Council verisi yükleniyor...</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Error State */}
+            {error && (
+                <div className="absolute inset-0 flex items-center justify-center bg-slate-900/90 z-50">
+                    <div className="text-center max-w-md">
+                        <div className="text-4xl mb-4">⚠️</div>
+                        <h3 className="text-lg font-semibold text-red-400 mb-2">Hata</h3>
+                        <p className="text-slate-400 mb-4">{error}</p>
+                        <button
+                            onClick={fetchCouncilData}
+                            className="px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-lg hover:bg-emerald-500/30 transition-colors"
+                        >
+                            Yeniden Dene
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Arka plan efektleri */}
             <BackgroundEffects piyasaRejimi={piyasaRejimi} finalKarar={finalKarar} />
 

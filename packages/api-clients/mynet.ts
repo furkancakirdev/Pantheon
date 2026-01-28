@@ -1,10 +1,15 @@
 /**
  * Mynet Finans API Client
  * Canlı Piyasa Verileri
- * 
+ *
  * Kaynak: https://finans.mynet.com
  * Endpoints: /api/real-time, /static/most-shares-live-user-data.json
  */
+
+export interface MynetConfig {
+    baseUrl?: string;
+    timeout?: number; // ms
+}
 
 export interface MarketData {
     xu100: {
@@ -42,49 +47,105 @@ export interface LiveStock {
     hacim: number;
 }
 
-const BASE_URL = 'https://finans.mynet.com';
+export class MynetClient {
+    private config: MynetConfig;
 
-/**
- * Canlı piyasa verilerini çeker (endeksler, döviz, emtia)
- */
-export async function fetchRealTimeMarket(): Promise<MarketData> {
-    const response = await fetch(`${BASE_URL}/api/real-time`, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-        },
-    });
-
-    if (!response.ok) {
-        throw new Error(`Mynet API hatası: ${response.status}`);
+    constructor(config?: MynetConfig) {
+        this.config = {
+            baseUrl: config?.baseUrl || 'https://finans.mynet.com',
+            timeout: config?.timeout || 30000,
+        };
     }
 
-    return await response.json() as MarketData;
-}
+    /**
+     * API çağrısı yap (timeout ile)
+     */
+    private async fetchWithTimeout(url: string, options?: RequestInit): Promise<Response> {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
 
-/**
- * En hareketli hisseleri çeker
- */
-export async function fetchMostActiveStocks(): Promise<LiveStock[]> {
-    const response = await fetch(`${BASE_URL}/static/most-shares-live-user-data.json`, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-        },
-    });
-
-    if (!response.ok) {
-        throw new Error(`Mynet API hatası: ${response.status}`);
+        try {
+            const response = await fetch(url, {
+                ...options,
+                signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+            return response;
+        } catch (error) {
+            clearTimeout(timeoutId);
+            throw error;
+        }
     }
 
-    return await response.json() as LiveStock[];
-}
+    /**
+     * Canlı piyasa verilerini çeker (endeksler, döviz, emtia)
+     */
+    async fetchRealTimeMarket(): Promise<MarketData> {
+        try {
+            const response = await this.fetchWithTimeout(`${this.config.baseUrl}/api/real-time`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                },
+            });
 
-/**
- * Piyasa özeti formatla
- */
-export function formatMarketSummary(data: MarketData): string {
-    return `
+            if (!response.ok) {
+                throw new Error(`Mynet API Hatası: HTTP ${response.status} - ${response.statusText}`);
+            }
+
+            const data = await response.json() as MarketData;
+
+            // Veri validation
+            if (!data.xu100 || !data.dolar) {
+                throw new Error('Mynet API: Geçersiz piyasa verisi formatı');
+            }
+
+            return data;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error('Mynet API Error:', errorMessage);
+            throw new Error(`Mynet piyasa verisi alınamadı: ${errorMessage}`);
+        }
+    }
+
+    /**
+     * En hareketli hisseleri çeker
+     */
+    async fetchMostActiveStocks(): Promise<LiveStock[]> {
+        try {
+            const response = await this.fetchWithTimeout(
+                `${this.config.baseUrl}/static/most-shares-live-user-data.json`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`Mynet API Hatası: HTTP ${response.status}`);
+            }
+
+            const data = await response.json() as LiveStock[];
+
+            if (!Array.isArray(data)) {
+                throw new Error('Mynet API: Geçersiz hisse verisi formatı');
+            }
+
+            return data;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error('Mynet Most Active Error:', errorMessage);
+            throw new Error(`En hareketli hisseler alınamadı: ${errorMessage}`);
+        }
+    }
+
+    /**
+     * Piyasa özeti formatla
+     */
+    formatMarketSummary(data: MarketData): string {
+        return `
 📊 Piyasa Özeti
 ━━━━━━━━━━━━━━━
 BIST 100: ${data.xu100?.deger?.toLocaleString('tr-TR')} (${data.xu100?.degisimOran > 0 ? '+' : ''}${data.xu100?.degisimOran?.toFixed(2)}%)
@@ -94,15 +155,23 @@ USD/TRY:  ${data.dolar?.satis?.toFixed(4)}
 EUR/TRY:  ${data.euro?.satis?.toFixed(4)}
 Altın:    ${data.altin?.satis?.toLocaleString('tr-TR')} TL
 `;
+    }
 }
 
-// Test için doğrudan çalıştırma
-if (import.meta.url === `file://${process.argv[1]}`) {
-    console.log('Mynet API test ediliyor...');
-    fetchRealTimeMarket()
-        .then(data => {
-            console.log('✅ Piyasa verisi alındı');
-            console.log(formatMarketSummary(data));
-        })
-        .catch(err => console.error('❌ Hata:', err.message));
+// Singleton instance
+export const mynet = new MynetClient();
+
+// Legacy function exports for backward compatibility
+export async function fetchRealTimeMarket(): Promise<MarketData> {
+    return mynet.fetchRealTimeMarket();
 }
+
+export async function fetchMostActiveStocks(): Promise<LiveStock[]> {
+    return mynet.fetchMostActiveStocks();
+}
+
+export function formatMarketSummary(data: MarketData): string {
+    return mynet.formatMarketSummary(data);
+}
+
+export default mynet;

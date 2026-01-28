@@ -50,3 +50,5 @@ API.txt
 "Yeni Metin Belgesi (2).txt"
 PANTHEON_*.md
 PANTHEON_*.txt
+.vercel
+.env*.local

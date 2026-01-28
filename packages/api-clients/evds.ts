@@ -10,6 +10,7 @@
 export interface EvdsConfig {
     apiKey: string;
     baseUrl?: string;
+    timeout?: number; // ms
 }
 
 export interface EvdsSeries {
@@ -28,6 +29,12 @@ export interface EvdsSeriesData {
     description: string;
     data: EvdsDataPoint[];
     unit: string;
+}
+
+export interface EvdsError {
+    message: string;
+    code?: string;
+    statusCode?: number;
 }
 
 // Önceden tanımlı seri kodları
@@ -107,7 +114,8 @@ export class EvdsClient {
     private constructor(config?: EvdsConfig) {
         this.config = {
             apiKey: config?.apiKey || '',
-            baseUrl: config?.baseUrl || 'https://evds2.tcmb.gov.tr/service/evds'
+            baseUrl: config?.baseUrl || 'https://evds2.tcmb.gov.tr/service/evds',
+            timeout: config?.timeout || 30000, // 30 saniye varsayılan
         };
     }
 
@@ -123,6 +131,28 @@ export class EvdsClient {
     }
 
     /**
+     * API çağrısı yap (timeout ile)
+     */
+    private async fetchWithTimeout(url: string): Promise<Response> {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
+
+        try {
+            const response = await fetch(url, {
+                signal: controller.signal,
+                headers: {
+                    'Accept': 'application/json',
+                },
+            });
+            clearTimeout(timeoutId);
+            return response;
+        } catch (error) {
+            clearTimeout(timeoutId);
+            throw error;
+        }
+    }
+
+    /**
      * Seri verisi çek
      */
     public async getSeries(
@@ -131,8 +161,7 @@ export class EvdsClient {
         endDate?: string
     ): Promise<EvdsSeriesData | null> {
         if (!this.config.apiKey) {
-            console.warn('EVDS API key not set');
-            return null;
+            throw new Error('EVDS API key bulunamadı. Lütfen EVDS_API_KEY environment variable\'ını ayarlayın.');
         }
 
         const cacheKey = `evds_${seriesCode}_${startDate}_${endDate}`;
@@ -150,23 +179,46 @@ export class EvdsClient {
             const start = startDate || thirtyDaysAgo.toISOString().split('T')[0];
             const end = endDate || today.toISOString().split('T')[0];
 
-            // Gerçek implementasyonda fetch çağrısı
-            // const response = await fetch(
-            //     `${this.config.baseUrl}/series=${seriesCode}&startDate=${start}&endDate=${end}&type=json&key=${this.config.apiKey}`
-            // );
+            // Gerçek API çağrısı
+            const url = `${this.config.baseUrl}/series=${seriesCode}&startDate=${start}&endDate=${end}&type=json&key=${this.config.apiKey}`;
+            const response = await this.fetchWithTimeout(url);
 
-            // Şimdilik mock data döndürelim
-            const mockData = this.getMockSeriesData(seriesCode, start, end);
+            if (!response.ok) {
+                throw new Error(`EVDS API Hatası: HTTP ${response.status} - ${response.statusText}`);
+            }
 
+            const result = await response.json();
+
+            // EVDS API response formatı kontrolü
+            if (!result || result.items.length === 0) {
+                throw new Error(`EVDS API: ${seriesCode} için veri bulunamadı`);
+            }
+
+            // EVDS formatını kendi formatımıza çevir
+            const items = result.items || [];
+            const data: EvdsDataPoint[] = items.map((item: any) => ({
+                date: item.Tarih || item.DATE,
+                value: item.value !== null && item.value !== undefined ? parseFloat(item.value) : null,
+            }));
+
+            const seriesData: EvdsSeriesData = {
+                seriesCode,
+                description: items[0]?.SERIE_TITLE || seriesCode,
+                data,
+                unit: items[0]?.UNIT || '',
+            };
+
+            // Cache'e kaydet
             this.cache.set(cacheKey, {
-                data: mockData,
+                data: seriesData,
                 expiry: Date.now() + this.CACHE_TTL.DAILY
             });
 
-            return mockData;
+            return seriesData;
         } catch (error) {
-            console.error(`EVDS error for series ${seriesCode}:`, error);
-            return null;
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error(`EVDS error for series ${seriesCode}:`, errorMessage);
+            throw new Error(`EVDS veri alınamadı (${seriesCode}): ${errorMessage}`);
         }
     }
 
@@ -175,15 +227,25 @@ export class EvdsClient {
      */
     public async getMultipleSeries(seriesCodes: string[]): Promise<Map<string, EvdsSeriesData>> {
         const results = new Map<string, EvdsSeriesData>();
+        const errors: Map<string, string> = new Map();
 
         await Promise.all(
             seriesCodes.map(async (code) => {
-                const data = await this.getSeries(code);
-                if (data) {
-                    results.set(code, data);
+                try {
+                    const data = await this.getSeries(code);
+                    if (data) {
+                        results.set(code, data);
+                    }
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    errors.set(code, errorMessage);
                 }
             })
         );
+
+        if (errors.size > 0) {
+            console.warn('EVDS: Bazı seriler alınamadı:', Array.from(errors.entries()));
+        }
 
         return results;
     }
@@ -200,28 +262,48 @@ export class EvdsClient {
             EVDS_SERIES.BIST100,
         ];
 
-        const results = await this.getMultipleSeries(seriesCodes);
+        try {
+            const results = await this.getMultipleSeries(seriesCodes);
 
-        if (results.size === 0) return null;
+            if (results.size === 0) {
+                throw new Error('Makro veriler alınamadı');
+            }
 
-        const usdTryData = results.get(EVDS_SERIES.USD_TRY);
-        const latestValue = (data: EvdsDataPoint[]) => data[data.length - 1]?.value || 0;
+            const usdTryData = results.get(EVDS_SERIES.USD_TRY);
+            const latestValue = (data: EvdsDataPoint[]) => {
+                if (!data || data.length === 0) return null;
+                // null olmayan son değeri bul
+                for (let i = data.length - 1; i >= 0; i--) {
+                    if (data[i].value !== null) return data[i].value;
+                }
+                return null;
+            };
 
-        return {
-            timestamp: new Date(),
-            usdTry: latestValue(usdTryData?.data || []),
-            eurTry: latestValue(results.get(EVDS_SERIES.EUR_TRY)?.data || []),
-            policyRate: latestValue(results.get(EVDS_SERIES.POLICY_RATE)?.data || []),
-            cpi: latestValue(results.get(EVDS_SERIES.CPI)?.data || []),
-            ppi: latestValue(results.get(EVDS_SERIES.PPI)?.data || []),
-            bist100: latestValue(results.get(EVDS_SERIES.BIST100)?.data || []),
-            m2y: latestValue(results.get(EVDS_SERIES.M2Y)?.data || []),
-            currentAccount: latestValue(results.get(EVDS_SERIES.CURRENT_ACCOUNT)?.data || []),
-            economicConfidence: latestValue(results.get(EVDS_SERIES.CONFIDENCE_INDEX)?.data || []),
-            unemployment: latestValue(results.get(EVDS_SERIES.UNEMPLOYMENT)?.data || []),
-            industrialProduction: latestValue(results.get(EVDS_SERIES.INDUSTRIAL_PRODUCTION)?.data || []),
-            reserves: latestValue(results.get(EVDS_SERIES.RESERVES)?.data || []),
-        };
+            const usdTry = latestValue(usdTryData?.data || []);
+            if (usdTry === null) {
+                throw new Error('USD/TRY verisi alınamadı');
+            }
+
+            return {
+                timestamp: new Date(),
+                usdTry,
+                eurTry: latestValue(results.get(EVDS_SERIES.EUR_TRY)?.data || []) || 0,
+                policyRate: latestValue(results.get(EVDS_SERIES.POLICY_RATE)?.data || []) || 0,
+                cpi: latestValue(results.get(EVDS_SERIES.CPI)?.data || []) || 0,
+                ppi: latestValue(results.get(EVDS_SERIES.PPI)?.data || []) || 0,
+                bist100: latestValue(results.get(EVDS_SERIES.BIST100)?.data || []) || 0,
+                m2y: latestValue(results.get(EVDS_SERIES.M2Y)?.data || []) || 0,
+                currentAccount: latestValue(results.get(EVDS_SERIES.CURRENT_ACCOUNT)?.data || []) || 0,
+                economicConfidence: latestValue(results.get(EVDS_SERIES.CONFIDENCE_INDEX)?.data || []) || 0,
+                unemployment: latestValue(results.get(EVDS_SERIES.UNEMPLOYMENT)?.data || []) || 0,
+                industrialProduction: latestValue(results.get(EVDS_SERIES.INDUSTRIAL_PRODUCTION)?.data || []) || 0,
+                reserves: latestValue(results.get(EVDS_SERIES.RESERVES)?.data || []) || 0,
+            };
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error('EVDS getMacroOverview error:', errorMessage);
+            throw new Error(`Makro veri alınamadı: ${errorMessage}`);
+        }
     }
 
     /**
@@ -245,7 +327,12 @@ export class EvdsClient {
     public async getPolicyRate(): Promise<number | null> {
         const data = await this.getSeries(EVDS_SERIES.POLICY_RATE);
         if (!data || data.data.length === 0) return null;
-        return data.data[data.data.length - 1].value;
+
+        // null olmayan son değeri bul
+        for (let i = data.data.length - 1; i >= 0; i--) {
+            if (data.data[i].value !== null) return data.data[i].value;
+        }
+        return null;
     }
 
     /**
@@ -257,75 +344,23 @@ export class EvdsClient {
         coreInflation: number | null;
     }> {
         const [cpiData, ppiData, coreData] = await Promise.all([
-            this.getSeries(EVDS_SERIES.CPI),
-            this.getSeries(EVDS_SERIES.PPI),
-            this.getSeries(EVDS_SERIES.CORE_INFLATION)
+            this.getSeries(EVDS_SERIES.CPI).catch(() => null),
+            this.getSeries(EVDS_SERIES.PPI).catch(() => null),
+            this.getSeries(EVDS_SERIES.CORE_INFLATION).catch(() => null),
         ]);
 
         const getLatest = (data: EvdsSeriesData | null) => {
             if (!data || data.data.length === 0) return null;
-            return data.data[data.data.length - 1].value;
+            for (let i = data.data.length - 1; i >= 0; i--) {
+                if (data.data[i].value !== null) return data.data[i].value;
+            }
+            return null;
         };
 
         return {
             cpi: getLatest(cpiData),
             ppi: getLatest(ppiData),
             coreInflation: getLatest(coreData)
-        };
-    }
-
-    /**
-     * Mock seri verisi
-     */
-    private getMockSeriesData(seriesCode: string, start: string, end: string): EvdsSeriesData {
-        const data: EvdsDataPoint[] = [];
-        const startDate = new Date(start);
-        const endDate = new Date(end);
-        const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-
-        let baseValue = 100;
-        let unit = 'Bilinmiyor';
-        let description = seriesCode;
-
-        // Seriye göre mock değer
-        if (seriesCode.includes('USD') || seriesCode.includes('DK.USD')) {
-            baseValue = 32 + Math.random() * 2;
-            unit = 'TL';
-            description = 'ABD Doları/Türk Lirası';
-        } else if (seriesCode.includes('EUR') || seriesCode.includes('DK.EUR')) {
-            baseValue = 35 + Math.random() * 2;
-            unit = 'TL';
-            description = 'Euro/Türk Lirası';
-        } else if (seriesCode.includes('FG.J')) {
-            baseValue = 45 + Math.random() * 5;
-            unit = '%';
-            description = 'Politika Faizi';
-        } else if (seriesCode.includes('BILESIK') || seriesCode.includes('BIST')) {
-            baseValue = 8000 + Math.random() * 500;
-            unit = 'Endeks';
-            description = 'BIST 100 Endeks';
-        } else if (seriesCode.includes('CPI') || seriesCode.includes('FG.J0')) {
-            baseValue = 60 + Math.random() * 5;
-            unit = '%';
-            description = 'Tüketici Fiyat Endeksi (Yıllık)';
-        }
-
-        for (let i = 0; i <= daysDiff; i++) {
-            const date = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000);
-            const change = (Math.random() - 0.5) * 0.02;
-            baseValue = baseValue * (1 + change);
-
-            data.push({
-                date: date.toISOString().split('T')[0],
-                value: Math.round(baseValue * 100) / 100
-            });
-        }
-
-        return {
-            seriesCode,
-            description,
-            data,
-            unit
         };
     }
 

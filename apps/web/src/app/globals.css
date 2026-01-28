@@ -10,6 +10,52 @@ body {
   color: var(--foreground);
 }
 
+/* Responsive Design Improvements */
+@media (max-width: 640px) {
+  .card {
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+  
+  .card-header {
+    font-size: 1rem;
+  }
+  
+  .data-table {
+    font-size: 0.875rem;
+  }
+  
+  .data-table th,
+  .data-table td {
+    padding: 8px 4px;
+  }
+  
+  .score-badge {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  .card {
+    padding: 16px;
+  }
+  
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .card {
+    padding: 12px;
+  }
+}
+
 /* Card Styles */
 .card {
   @apply bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg;

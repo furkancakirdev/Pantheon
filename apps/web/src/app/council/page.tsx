@@ -6,7 +6,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { CouncilRoom, CompactCouncilRoom } from '@components/council/CouncilRoom';
+import { CouncilRoom, CompactCouncilRoom } from '../../components/council/CouncilRoom';
 import { ModulGorus, OyTipi } from '@pantheon/analysis/council';
 
 interface CouncilData {

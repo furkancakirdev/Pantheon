@@ -72,8 +72,7 @@ export async function GET(request: NextRequest) {
             const fonTuru = searchParams.get('fonTuru') || undefined;
             const limit = parseInt(searchParams.get('limit') || '10');
 
-            const funds = await fetchFundReturns();
-            const best = selectBestFunds(funds, { minReturn, maxRisk, fonTuru, limit });
+            const best = await selectBestFunds({ minReturn, maxRisk, fonTuru, limit });
 
             return NextResponse.json({
                 success: true,
@@ -86,8 +85,7 @@ export async function GET(request: NextRequest) {
 
         if (action === 'types') {
             // Fon türleri listesi
-            const funds = await fetchFundReturns();
-            const types = getFonTurleri(funds);
+            const types = await getFonTurleri();
 
             return NextResponse.json({
                 success: true,
@@ -97,8 +95,7 @@ export async function GET(request: NextRequest) {
 
         if (action === 'founders') {
             // Kurucu şirketleri listesi
-            const funds = await fetchFundReturns();
-            const founders = getKurucular(funds);
+            const founders = await getKurucular();
 
             return NextResponse.json({
                 success: true,

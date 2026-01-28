@@ -4,8 +4,8 @@
  * Grand Council'e Prometheus modülünü entegre eder
  */
 
-import type { PrometheusAnalysis, CouncilVote } from '../prometheus';
-import type { ModulOyu, ModulGorus } from './grand-council';
+import type { PrometheusAnalysis } from '../prometheus';
+import type { ModulOyu, ModulGorus, OyTipi } from './grand-council';
 
 // ============ PROMETHEUS ADAPTÖRLERİ ============
 
@@ -16,7 +16,7 @@ import type { ModulOyu, ModulGorus } from './grand-council';
  * @returns ModulOyu
  */
 export function prometheusOyu(analysis: PrometheusAnalysis): ModulOyu {
-  let oy: CouncilVote['oy'];
+  let oy: OyTipi = 'BEKLE';
   let guven: number;
   
   // Dolaylı faydalanıcı var mı?

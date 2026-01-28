@@ -351,7 +351,7 @@ export function generateSummary(
   if (targetAllocation.gold > 0) allocations.push(`Altın %${targetAllocation.gold}`);
   if (targetAllocation.cash > 0) allocations.push(`Nakit %${targetAllocation.cash}`);
 
-  parts.push(`Hedef Dağılım: ${allocifications.join(', ')}.`);
+  parts.push(`Hedef Dağılım: ${allocations.join(', ')}.`);
 
   parts.push(`Beklenen Getiri: %${metrics.expectedReturn.toFixed(1)}, Risk: %${metrics.volatility.toFixed(1)}.`);
 
@@ -382,19 +382,6 @@ export function getAssetClassName(assetClass: AssetClass): string {
 // ============ EXPORTS ============
 
 export default {
-  AssetClass,
-  AssetType,
-  RiskProfile,
-  AssetAllocation,
-  AssetData,
-  RegimeStatus,
-  RiskBudget,
-  PortfolioMetrics,
-  AssetRotationSignal,
-  PoseidonResult,
-  PoseidonOpinion,
-  Verdict,
-  PoseidonWeights,
   getLetterGrade,
   getVerdict,
   verdictToAction,

@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,15 +40,15 @@ export async function GET(
     }
 
     // Özet hesaplamalar
-    const aktifPozisyonlar = portfolio.pozisyonlar.filter((p) => !p.satistami);
-    const toplamMaliyet = aktifPozisyonlar.reduce((sum, pos) => sum + pos.toplamMaliyet, 0);
-    const toplamDeger = aktifPozisyonlar.reduce((sum, pos) => sum + (pos.guncelDeger || 0), 0);
+    const aktifPozisyonlar = portfolio.pozisyonlar.filter((p: any) => !p.satistami);
+    const toplamMaliyet = aktifPozisyonlar.reduce((sum: number, pos: any) => sum + pos.toplamMaliyet, 0);
+    const toplamDeger = aktifPozisyonlar.reduce((sum: number, pos: any) => sum + (pos.guncelDeger || 0), 0);
     const karZarar = toplamDeger - toplamMaliyet;
     const karZararYuzde = toplamMaliyet > 0 ? (karZarar / toplamMaliyet) * 100 : 0;
 
     // Satis realizmis kar/zarar
-    const satisPozisyonlar = portfolio.pozisyonlar.filter((p) => p.satistami);
-    const realizmisKar = satisPozisyonlar.reduce((sum, pos) => sum + (pos.karZarar || 0), 0);
+    const satisPozisyonlar = portfolio.pozisyonlar.filter((p: any) => p.satistami);
+    const realizmisKar = satisPozisyonlar.reduce((sum: number, pos: any) => sum + (pos.karZarar || 0), 0);
 
     return NextResponse.json({
       success: true,

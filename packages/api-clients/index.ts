@@ -9,3 +9,4 @@ export * from './mynet.js';
 export * from './fred.js';
 export * from './fmp.js';
 export * from './llm.js';
+export * from './zai.js';

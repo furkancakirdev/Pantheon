@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,9 +28,9 @@ export async function GET() {
     });
 
     // Her portföy için özet hesaplamalar
-    const portfoliosWithSummary = portfolios.map((p) => {
-      const toplamMaliyet = p.pozisyonlar.reduce((sum, pos) => sum + pos.toplamMaliyet, 0);
-      const toplamDeger = p.pozisyonlar.reduce((sum, pos) => sum + (pos.guncelDeger || 0), 0);
+    const portfoliosWithSummary = portfolios.map((p: any) => {
+      const toplamMaliyet = p.pozisyonlar.reduce((sum: number, pos: any) => sum + pos.toplamMaliyet, 0);
+      const toplamDeger = p.pozisyonlar.reduce((sum: number, pos: any) => sum + (pos.guncelDeger || 0), 0);
       const karZarar = toplamDeger - toplamMaliyet;
       const karZararYuzde = toplamMaliyet > 0 ? (karZarar / toplamMaliyet) * 100 : 0;
 
