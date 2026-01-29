@@ -12,6 +12,9 @@
             "distribution": "internal",
             "android": {
                 "buildType": "apk"
+            },
+            "env": {
+                "EXPO_USE_FAST_RESOLVER": "1"
             }
         },
         "production": {
