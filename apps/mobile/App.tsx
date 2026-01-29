@@ -139,7 +139,7 @@ const SignalCard = ({ signal, onPress, expanded }: { signal: PantheonSignal, onP
             <Text style={styles.symbolText}>{signal.symbol}</Text>
             <Text style={styles.priceText}>${signal.price?.toFixed(2)}</Text>
           </View>
-          <LinearGradient colors={getVerdictStyle(signal.verdict)} style={styles.badge}>
+          <LinearGradient colors={getVerdictStyle(signal.verdict) as [string, string, ...string[]]} style={styles.badge}>
             <Text style={styles.badgeText}>{signal.verdict}</Text>
           </LinearGradient>
         </View>

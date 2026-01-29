@@ -114,7 +114,7 @@ const LogoWithEye: React.FC<{ size: number; animated: boolean }> = ({
             <View style={styles.pupilHighlight} />
           </View>
         </View>
-      </Animated.View>
+      </View>
     </View>
   );
 };
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconText: {
-    filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.5))',
+    // filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.5))', // RN doesn't support filter
   },
   // Text
   textContainer: {
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   compactIcon: {
-    filter: 'drop-shadow(0 0 8px rgba(255, 215, 0, 0.4))',
+    // filter: 'drop-shadow(0 0 8px rgba(255, 215, 0, 0.4))',
   },
   compactText: {
     fontWeight: '900',

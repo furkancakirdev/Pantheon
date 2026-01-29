@@ -11,8 +11,10 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+// @ts-ignore
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { Theme } from '../constants/Theme';
@@ -131,8 +133,8 @@ const ModulesGrid: React.FC<ModulesGridProps> = ({ votes, onModulePress }) => {
                         vote.oy === 'AL' || vote.oy === 'GÜÇLÜ AL'
                           ? Theme.colors.positive
                           : vote.oy === 'SAT' || vote.oy === 'GÜÇLÜ SAT'
-                          ? Theme.colors.negative
-                          : Theme.colors.warning,
+                            ? Theme.colors.negative
+                            : Theme.colors.warning,
                     },
                   ]}
                 />
@@ -325,12 +327,10 @@ export const StockDetailScreen: React.FC = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <ScrollView
-            refreshControlProps={{
-              refreshing: refreshing,
-              onRefresh: onRefresh,
-              tintColor: Theme.colors.accent,
-            }}
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Theme.colors.accent}
           />
         }
       >

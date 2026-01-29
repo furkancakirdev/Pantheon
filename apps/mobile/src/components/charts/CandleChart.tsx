@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
-import Svg, { Line, Rect } from 'react-native-svg';
+import Svg, { Line, Rect, Text as SvgText } from 'react-native-svg';
 
 import { Theme } from '../../constants/Theme';
 import { GlassCard } from '../cards/GlassCard';
@@ -153,10 +153,10 @@ export const CandleChart: React.FC<CandleChartProps> = ({
   // Grid lines
   const gridLines = showGrid
     ? [0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-        const y = 10 + ratio * (height - (showVolume ? 50 : 10));
-        const price = maxPrice - ratio * priceRange;
-        return { y, price };
-      })
+      const y = 10 + ratio * (height - (showVolume ? 50 : 10));
+      const price = maxPrice - ratio * priceRange;
+      return { y, price };
+    })
     : [];
 
   return (
@@ -180,7 +180,7 @@ export const CandleChart: React.FC<CandleChartProps> = ({
                 strokeWidth="0.5"
                 strokeDasharray="4,4"
               />
-              <Text
+              <SvgText
                 x={Math.max(width, data.length * (CANDLE_WIDTH + CANDLE_GAP)) - 5}
                 y={line.y + 3}
                 fontSize="9"
@@ -188,7 +188,7 @@ export const CandleChart: React.FC<CandleChartProps> = ({
                 textAnchor="end"
               >
                 {line.price.toFixed(2)}
-              </Text>
+              </SvgText>
             </g>
           ))}
 

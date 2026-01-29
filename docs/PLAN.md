@@ -1,87 +1,61 @@
-# Argus-Terminal Entegrasyon Planı
+# Pantheon Orchestration Plan
 
-Kullanıcının isteği üzerine `Argus-Terminal-main` (iOS/Swift) projesindeki gelişmiş analiz modülleri `InvestorAgent` (Web/Mobile) projesine entegre edilecektir.
+## 🎯 Objective
 
-## 🎯 Hedef
+Fix build errors in the Pantheon monorepo to ensure successful deployment of the Web application (Vercel) and Mobile application (Expo/Android).
 
-Argus Terminal'in 7 modüllü "Grand Council" mimarisini InvestorAgent içinde tam fonksiyonel hale getirmek.
+## 🔍 Analysis Findings
 
-### Mevcut Durum (InvestorAgent)
+Analysis of the codebase and build logs reveals critical blocking issues:
 
-- **Atlas (Temel):** Yaşar Erdinç kuralları (Mevcut)
-- **Orion (Teknik):** Kıvanç İndikatörleri (Mevcut)
-- **Demeter (Sektör):** Wonderkid (Mevcut)
-- **Hermes (Sentiment):** Sentiment Analizi (Mevcut)
-- **Grand Council:** Mevcut modüllerle çalışıyor (5 modül)
+1. **Shared Package Errors (`@pantheon/analysis`)**:
+    * `packages/analysis/aether/config.ts`: Syntax error (missing semicolon/invalid object usage).
+    * `packages/analysis/athena/config.ts`: Syntax error (invalid characters/structure).
+    * `packages/analysis/hermes/api/client.ts`: Syntax error (template string malformation).
+    * *Impact*: Blocks BOTH Web and Mobile builds as they depend on this workspace.
 
-### Eksik Modüller (Argus'tan Alınacak)
+2. **Web Application Errors**:
+    * `apps/web/src/app/council/page.tsx`: Missing import `@components/council/CouncilRoom`.
 
-- **Aether (Makro):** Varlık alokasyonu ve piyasa rejimi
-- **Athena (Faktör):** Ali Perşembe (kısmen var, geliştirilecek)
-- **Chiron (Risk/Öğrenme):** Risk yönetimi ve portföy optimizasyonu
-- **Phoenix (Strateji):** Destek/Direnç bazlı otomatik tarama
+3. **Mobile Deployment**:
+    * Likely failing due to the upstream `analysis` package errors.
 
----
+## 🛠️ Implementation Phases
 
-## 📅 Uygulama Planı
+### Phase 1: Core System Repair (The Foundation)
 
-### Faz 1: Altyapı ve Eksik Modüllerin Port Edilmesi
+*Goal: Fix shared package compilation errors.*
+* [ ] **Fix Aether Config**: Correct syntax in `packages/analysis/aether/config.ts`.
+* [ ] **Fix Athena Config**: Correct syntax in `packages/analysis/athena/config.ts`.
+* [ ] **Fix Hermes Client**: Fix string interpolation in `packages/analysis/hermes/api/client.ts`.
+* [ ] **Verification**: Run `turbo run build --filter=@pantheon/analysis` to confirm clean build.
 
-Argus'un Swift kodları TypeScript'e çevrilecek.
+### Phase 2: Web Application Restoration
 
-#### 1.1 Aether Modülü (Makro)
+*Goal: Get the web dashboard running.*
+* [ ] **Resolve Imports**: Fix the missing `@components` alias or import path in `apps/web/src/app/council/page.tsx`.
+* [ ] **Build Check**: Run `turbo run build --filter=web`.
 
-- `AetherAllocationEngine.swift` -> `packages/analysis/aether/engine.ts`
-- Piyasa rejimi (Euphoria, Risk On, Neutral, Risk Off) hesaplama
-- Varlık dağılım önerisi (Hisse, Tahvil, Altın, Nakit)
+### Phase 3: Mobile Application Enablement
 
-#### 1.2 Chiron Modülü (Risk & Öğrenme)
+*Goal: Generate an installable APK/AAB.*
+* [ ] **Dependency Check**: Ensure `apps/mobile` builds locally with fixed packages.
+* [ ] **EAS Build**: Run `eas build --platform android --profile preview` (or local build) to create an installable binary for the user.
 
-- `Chiron/RiskBudgetService.swift` -> `packages/analysis/chiron/risk.ts`
-- Portföy risk yönetimi ve pozisyon büyüklüğü hesaplama
+### Phase 4: Deployment & Verification
 
-#### 1.3 Phoenix Modülü (Strateji)
+- [ ] **Push to Main**: Trigger Vercel deployment.
+* [ ] **Mobile Install**: Provide user with the build link or file.
+* [ ] **Final Smoke Test**: Verify core features on both platforms.
 
-- `Phoenix/PhoenixScannerService.swift` -> `packages/analysis/phoenix/engine.ts`
-- Destek/Direnç taraması ve kırılım sinyalleri
+## 👥 Agent Allocation (Orchestration Phase 2)
 
----
+Upon approval, the following agents will be activated in parallel:
 
-### Faz 2: Mevcut Modüllerin Güçlendirilmesi (Argus Mantığı ile)
+1. **`backend-specialist`**: Fix the `analysis` package (TypeScript/Node.js logic).
+2. **`frontend-specialist`**: Fix the Web UI import errors and verify Mobile UI compatibility.
+3. **`devops-engineer`**: Manage the Expo build process and Vercel syncing.
 
-#### 2.1 Orion (Teknik) - V3 Mimarisi
+## ❓ User Decisions Required
 
-- `OrionAnalysisService.swift` mantığı eklenecek.
-- Trend, Momentum, Volatilite, Yapı (Structure) puanlaması.
-- Mevcut Kıvanç indikatörleri ile birleştirilecek.
-
-#### 2.2 Atlas (Temel) - Dinamik Oranlar
-
-- `AtlasEngine.swift` mantığı eklenecek.
-- Canlı fiyat ile dinamik F/K, PD/DD hesaplama.
-
----
-
-### Faz 3: Grand Council Güncellemesi
-
-- Yeni modüller (Aether, Phoenix, Chiron) oylama sistemine dahil edilecek.
-- Toplam 7 modülün ağırlıklı oylaması sağlanacak.
-
----
-
-### Faz 4: Frontend Entegrasyonu
-
-Her modül için detaylı analiz sayfaları oluşturulacak.
-
-- [ ] **Aether Sayfası:** Makro görünüm ve varlık dağılımı
-- [ ] **Chiron Sayfası:** Risk analizi
-- [ ] **Phoenix Sayfası:** Strateji sinyalleri
-- [ ] **Grand Council:** 7 modüllü yeni görünüm
-
----
-
-## 🛠️ Teknoloji Stack
-
-- **Backend:** TypeScript, Node.js
-- **Frontend:** Next.js (Web), React Native (Mobile)
-- **Database:** Prisma (Veri saklama gerekirse)
+- (Already confirmed via prompt context): Use existing stack (Next.js, Expo, Supabase).

@@ -131,7 +131,7 @@ export const ChironMetricsCard: React.FC<ChironMetricsCardProps> = ({
           <Text style={styles.icon}>📊</Text>
           <View style={styles.headerContent}>
             <Text style={styles.title}>Portföy Risk Analizi</Text>
-          </Text>
+          </View>
         </View>
 
         {/* Metrics Grid */}
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '700',
-    color: Theme.colors.text,
+    color: Theme.colors.textPrimary,
   },
   verdict: {
     fontSize: 14,
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 14,
     fontWeight: '700',
-    color: Theme.colors.text,
+    color: Theme.colors.textPrimary,
   },
   reasonContainer: {
     padding: Theme.spacing.small,
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   riskBarValue: {
     fontSize: 11,
     fontWeight: '600',
-    color: Theme.colors.text,
+    color: Theme.colors.textPrimary,
     width: 40,
     textAlign: 'right',
   },
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   sectorValue: {
     fontSize: 11,
     fontWeight: '600',
-    color: Theme.colors.text,
+    color: Theme.colors.textPrimary,
     width: 40,
     textAlign: 'right',
   },

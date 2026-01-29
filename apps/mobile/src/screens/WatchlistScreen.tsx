@@ -105,7 +105,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ visible, onClose, onAdd }) 
   const [notlar, setNotlar] = useState('');
 
   const handleAdd = () => {
-    if (!hesseKod) {
+    if (!hisseKod) {
       Alert.alert('Eksik Bilgi', 'Hisse kodu zorunludur');
       return;
     }
@@ -272,7 +272,7 @@ export const WatchlistScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [addItemModalVisible, setAddItemModalVisible] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
-  
+
   // Fetch watchlists
   const fetchWatchlists = useCallback(async () => {
     try {
@@ -327,8 +327,8 @@ export const WatchlistScreen: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          hisseKod: data.hesseKod,
-          hisseAd: data.hesseAd,
+          hisseKod: data.hisseKod,
+          hisseAd: data.hisseAd,
           hedefFiyat: data.hedefFiyat ? parseFloat(data.hedefFiyat) : undefined,
           alarmFiyat: data.alarmFiyat ? parseFloat(data.alarmFiyat) : undefined,
           notlar: data.notlar || undefined,

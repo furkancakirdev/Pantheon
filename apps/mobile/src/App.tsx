@@ -88,9 +88,9 @@ const styles = StyleSheet.create({
 export default App;
 
 // For Expo Router compatibility
-export { screens } from './screens';
-export { navigation } from './navigation';
-export { components } from './components';
-export { hooks } from './hooks';
-export { constants } from './constants';
-export { types } from './types';
+export * as screens from './screens';
+export * as navigation from './navigation';
+export * as components from './components';
+export * as hooks from './hooks';
+export * as constants from './constants';
+export * as types from './types';

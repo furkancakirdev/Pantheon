@@ -13,6 +13,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Theme } from '../constants/Theme';
 
 // ============ SPLASH SCREEN PROPS ============
 interface SplashScreenProps {
@@ -241,7 +242,7 @@ export const MiniSplash: React.FC<MiniSplashProps> = ({ visible, message }) => {
 
   return (
     <Animated.View style={[styles.miniSplash, { opacity }]}>
-      <View style={styles.miniLogo}>👁️</View>
+      <Text style={styles.miniLogo}>👁️</Text>
       {message && <Text style={styles.miniMessage}>{message}</Text>}
     </Animated.View>
   );

@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
-import Svg, { Polyline, Line, Circle, Area, Path } from 'react-native-svg';
+import Svg, { Polyline, Line, Circle, Path, Polygon, Rect, Text as SvgText } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { Theme } from '../../constants/Theme';
@@ -208,14 +208,14 @@ export const CandleMini: React.FC<CandleMiniProps> = ({
         const bodyTop =
           height -
           ((Math.max(candle.open, candle.close) - minLow) / range) *
-            height *
-            0.8 -
+          height *
+          0.8 -
           height * 0.1;
         const bodyBottom =
           height -
           ((Math.min(candle.open, candle.close) - minLow) / range) *
-            height *
-            0.8 -
+          height *
+          0.8 -
           height * 0.1;
         const bodyHeight = Math.max(bodyBottom - bodyTop, 1);
 
@@ -289,14 +289,14 @@ export const VerticalBar: React.FC<VerticalBarProps> = ({
           (value >= 70
             ? Theme.colors.positive
             : value >= 40
-            ? Theme.colors.warning
-            : Theme.colors.negative);
+              ? Theme.colors.warning
+              : Theme.colors.negative);
 
         return (
           <g key={index}>
             <Rect x={x} y={y} width={barWidth} height={barHeight} fill={barColor} rx="2" />
             {labels && (
-              <Text
+              <SvgText
                 x={x + barWidth / 2}
                 y={height - 2}
                 fontSize="8"
@@ -304,7 +304,7 @@ export const VerticalBar: React.FC<VerticalBarProps> = ({
                 textAnchor="middle"
               >
                 {labels[index]}
-              </Text>
+              </SvgText>
             )}
           </g>
         );
@@ -328,8 +328,8 @@ export const ScoreGauge: React.FC<ScoreGaugeProps> = ({ score, size = 60 }) => {
     score >= 70
       ? Theme.colors.positive
       : score >= 40
-      ? Theme.colors.warning
-      : Theme.colors.negative;
+        ? Theme.colors.warning
+        : Theme.colors.negative;
 
   // Calculate angle (180 degrees = half circle)
   const startAngle = 180;
@@ -361,11 +361,9 @@ export const ScoreGauge: React.FC<ScoreGaugeProps> = ({ score, size = 60 }) => {
     <Svg width={size} height={size / 2}>
       {/* Background arc */}
       <Path
-        d={`M ${polarToCartesian(center, center, radius, 180).x} ${
-          polarToCartesian(center, center, radius, 180).y
-        } A ${radius} ${radius} 0 0 1 ${polarToCartesian(center, center, radius, 0).x} ${
-          polarToCartesian(center, center, radius, 0).y
-        }`}
+        d={`M ${polarToCartesian(center, center, radius, 180).x} ${polarToCartesian(center, center, radius, 180).y
+          } A ${radius} ${radius} 0 0 1 ${polarToCartesian(center, center, radius, 0).x} ${polarToCartesian(center, center, radius, 0).y
+          }`}
         fill="none"
         stroke={Theme.colors.secondaryBackground}
         strokeWidth="8"
@@ -393,7 +391,6 @@ const styles = StyleSheet.create({
 });
 
 // For TypeScript compatibility
-const Rect = (props: any) => <rect {...props} />;
-const Text = (props: any) => <text {...props} />;
+// Removed local definitions in favor of imports
 
 export default MiniChart;

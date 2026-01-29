@@ -12,6 +12,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  RefreshControl,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -335,12 +336,10 @@ export const CouncilScreen: React.FC = () => {
       style={[styles.container, { paddingTop: insets.top }]}
       contentContainerStyle={styles.scrollContent}
       refreshControl={
-        <ScrollView
-          refreshControlProps={{
-            refreshing,
-            onRefresh,
-            tintColor: Theme.colors.accent,
-          }}
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={Theme.colors.accent}
         />
       }
     >
@@ -376,7 +375,7 @@ export const CouncilScreen: React.FC = () => {
 
       {/* Aether HUD */}
       <View style={styles.section}>
-        <AetherHUDCard macro={macro} />
+        <AetherHUDCard macro={macro || undefined} />
       </View>
 
       {/* Legend */}

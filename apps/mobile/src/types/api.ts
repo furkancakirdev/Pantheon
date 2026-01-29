@@ -135,6 +135,7 @@ export interface CompleteStockAnalysis {
   symbol: string;
   orion: OrionAnalysis;
   persembe: PersembeAnalysis;
+  councilKarar: CouncilDecision;
   erdinc?: {
     toplamSkor: number;
     buyumeSkor: number;
@@ -288,25 +289,4 @@ export interface PositionSizeResult {
 }
 
 // ============ EXPORT ALL ============
-export default {
-  Verdict,
-  ModuleVote,
-  CouncilDecision,
-  StockSignal,
-  MarketData,
-  StockAnalysis,
-  MacroRating,
-  BacktestResult,
-  NewsItem,
-  HermesResult,
-  ApiResponse,
-  StockQuote,
-  FundamentalData,
-  AppSettings,
-  PhoenixSignal,
-  PhoenixCandidate,
-  PhoenixAnalysis,
-  ChironRiskDecision,
-  ChironRiskMetrics,
-  PositionSizeResult,
-};
+// Types are exported individually above

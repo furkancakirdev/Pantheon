@@ -132,7 +132,7 @@ export const MarketScreen: React.FC = () => {
     <View style={styles.listHeader}>
       {/* Aether HUD */}
       <View style={styles.aetherSection}>
-        <AetherHUDCard macro={macro} />
+        <AetherHUDCard macro={macro || undefined} />
       </View>
 
       {/* Market Header */}
@@ -160,7 +160,7 @@ export const MarketScreen: React.FC = () => {
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.content}>
           <View style={styles.aetherSection}>
-            <AetherHUDCard macro={macro} />
+            <AetherHUDCard macro={macro || undefined} />
           </View>
           <LoadingState />
         </View>

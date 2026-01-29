@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+// @ts-ignore
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { Theme } from '../constants/Theme';
@@ -258,14 +259,14 @@ export const BacktestScreen: React.FC = () => {
   // Mock trades for demo
   const mockTrades = result
     ? Array.from({ length: result.totalTrades }, (_, i) => ({
-        date: new Date(
-          Date.now() - (result.totalTrades - i) * 24 * 60 * 60 * 1000
-        ).toLocaleDateString('tr-TR'),
-        signal: i % 3 === 0 ? 'AL' : i % 3 === 1 ? 'SAT' : 'BEKLE',
-        entryPrice: 100 + Math.random() * 50,
-        exitPrice: 100 + Math.random() * 50,
-        return: (Math.random() - 0.4) * 20,
-      }))
+      date: new Date(
+        Date.now() - (result.totalTrades - i) * 24 * 60 * 60 * 1000
+      ).toLocaleDateString('tr-TR'),
+      signal: i % 3 === 0 ? 'AL' : i % 3 === 1 ? 'SAT' : 'BEKLE',
+      entryPrice: 100 + Math.random() * 50,
+      exitPrice: 100 + Math.random() * 50,
+      return: (Math.random() - 0.4) * 20,
+    }))
     : [];
 
   return (

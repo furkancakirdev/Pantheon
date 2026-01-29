@@ -21,6 +21,13 @@ import { PortfolioScreen } from '../screens/PortfolioScreen';
 import { WatchlistScreen } from '../screens/WatchlistScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 
+// ============ PLACEHOLDER ============
+const PlaceholderScreen = ({ name }: { name: string }) => (
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Theme.colors.background }}>
+    <Text style={{ color: Theme.colors.textPrimary, ...Theme.typography.h3 }}>{name}</Text>
+  </View>
+);
+
 // ============ STACK NAVIGATOR ============
 export type RootStackParamList = {
   Main: undefined;
@@ -141,9 +148,10 @@ export const AppNavigator: React.FC<AppNavigatorProps> = ({
 
 // ============ NAVIGATION HOOKS ============
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export const useAppNavigation = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   return {
     navigateToStock: (symbol: string) =>

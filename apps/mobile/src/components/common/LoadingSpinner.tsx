@@ -356,8 +356,8 @@ export const FullScreenLoading: React.FC<FullScreenLoadingProps> = ({
 
 // ============ SKELETON LOADING ============
 export interface SkeletonProps {
-  width?: number;
-  height?: number;
+  width?: number | string;
+  height?: number | string;
   variant?: 'rect' | 'circle';
 }
 
@@ -390,9 +390,9 @@ export const Skeleton: React.FC<SkeletonProps> = ({
       style={[
         styles.skeleton,
         {
-          width,
-          height,
-          borderRadius: variant === 'circle' ? width / 2 : 4,
+          width: width as any,
+          height: height as any,
+          borderRadius: variant === 'circle' && typeof width === 'number' ? width / 2 : 4,
           opacity: opacityAnim,
         },
       ]}

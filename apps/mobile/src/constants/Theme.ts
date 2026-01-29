@@ -29,6 +29,7 @@ export const Colors = {
   neutral: '#565E6D' as string,             // Steel Gray
 
   // Typography
+  text: '#FFFFFF' as string,
   textPrimary: '#FFFFFF' as string,
   textSecondary: '#8A8F98' as string,       // Stardust Gray
   textTertiary: '#4A4F58' as string,
@@ -57,6 +58,7 @@ export const getVerdictColor = (verdict?: string): string => {
 // ============ SPACING ============
 export const Spacing = {
   tiny: 4,
+  xSmall: 2,
   small: 8,
   medium: 16,
   large: 24,

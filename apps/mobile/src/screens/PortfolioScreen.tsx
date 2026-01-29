@@ -144,8 +144,8 @@ const AddPositionModal: React.FC<AddPositionModalProps> = ({ visible, onClose, o
     }
     onAdd({ hisseKod, hisseAd, adet, alimFiyati });
     // Reset
-    setHesseKod('');
-    setHesseAd('');
+    setHisseKod('');
+    setHisseAd('');
     setAdet('');
     setAlimFiyati('');
   };
@@ -166,7 +166,7 @@ const AddPositionModal: React.FC<AddPositionModalProps> = ({ visible, onClose, o
             <TextInput
               style={styles.input}
               value={hisseKod}
-              onChangeText={setHesseKod}
+              onChangeText={setHisseKod}
               placeholder="THYAO"
               placeholderTextColor={Theme.colors.textTertiary}
               autoCapitalize="characters"
@@ -178,7 +178,7 @@ const AddPositionModal: React.FC<AddPositionModalProps> = ({ visible, onClose, o
             <TextInput
               style={styles.input}
               value={hisseAd}
-              onChangeText={setHesseAd}
+              onChangeText={setHisseAd}
               placeholder="Türk Hava Yolları"
               placeholderTextColor={Theme.colors.textTertiary}
             />
