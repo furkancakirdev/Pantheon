@@ -127,19 +127,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Chiron API Error:', error);
 
-    // Fallback mock response
     return NextResponse.json({
-      success: true,
-      data: {
-        approved: true,
-        adjustedQuantity: 100,
-        suggestedStopLoss: 70.2,
-        suggestedTakeProfit: 93.6,
-        riskR: 2.0,
-        reason: '2R yöntemi. Grand Council: 80/100',
-        warnings: [],
-      },
-    });
+      success: false,
+      error: error instanceof Error ? error.message : 'Bilinmeyen hata',
+    }, { status: 500 });
   }
 }
 

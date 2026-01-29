@@ -4,6 +4,7 @@
   "description": "Pantheon Trading OS - Hibrit Yatırım Analiz Platformu",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.13.0",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -47,7 +48,7 @@
     "node-cron": "^4.2.1"
   },
   "engines": {
-    "node": ">=18.0.0",
+    "node": "18.x",
     "pnpm": ">=8.0.0"
   },
   "packageManager": "pnpm@9.15.0"

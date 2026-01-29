@@ -1,6 +1,8 @@
 /**
  * Stocks API - Tüm Piyasalar için
  * BIST, ABD ve TEFAS fonlarını içerir
+ *
+ * Production: İş Yatırım API'den gerçek veri çekiyor
  */
 
 export const dynamic = 'force-dynamic';
@@ -10,11 +12,10 @@ import {
     BIST_STOCKS,
     US_STOCKS,
     TEFAS_FUNDS,
-    getAssetsByMarket,
-    findAsset,
     type StockInfo,
     type FundInfo
 } from '@db/stock-registry';
+import { IsyatirimClient, type StockFundamentals } from '@api-clients/isyatirim';
 
 interface StockData {
     kod: string;
@@ -27,9 +28,20 @@ interface StockData {
     degisim: number;
     fk?: number;
     pddd?: number;
+    fdFavok?: number;
+    roe?: number;
+    borcOzkaynak?: number;
+    piyasaDegeri?: number;
+    yabanciOran?: number;
     hacim?: number;
     aktif: boolean;
+    dataSource?: 'is_yatirim' | 'fallback';
 }
+
+// Cache için global değişken (5 dakika)
+let cachedBistData: StockFundamentals[] | null = null;
+let cacheTime: number | null = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 dakika
 
 /**
  * GET /api/stocks
@@ -49,18 +61,25 @@ export async function GET(request: NextRequest) {
     try {
         let stocks: StockData[] = [];
 
+        // BIST hisseleri için İş Yatırım API'den gerçek veri çek
+        let bistFundamentals: StockFundamentals[] = [];
+
+        if (market === 'BIST' || market === 'ALL') {
+            bistFundamentals = await getBistFundamentals();
+        }
+
         // Piyasa filtresi
         if (market === 'BIST') {
-            stocks = BIST_STOCKS.map(s => enrichWithPriceData(s));
+            stocks = enrichBISTStocksWithRealData(bistFundamentals);
         } else if (market === 'US') {
-            stocks = US_STOCKS.map(s => enrichWithPriceData(s));
+            stocks = US_STOCKS.map(s => enrichUSStockData(s));
         } else if (market === 'TEFAS') {
             stocks = TEFAS_FUNDS.map(f => enrichFundWithData(f));
         } else {
             // ALL - Tüm piyasalar
             stocks = [
-                ...BIST_STOCKS.map(s => enrichWithPriceData(s)),
-                ...US_STOCKS.map(s => enrichWithPriceData(s)),
+                ...enrichBISTStocksWithRealData(bistFundamentals),
+                ...US_STOCKS.map(s => enrichUSStockData(s)),
                 ...TEFAS_FUNDS.map(f => enrichFundWithData(f))
             ];
         }
@@ -87,7 +106,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            source: 'stock_registry',
+            source: 'real_api',
             count: stocks.length,
             data: stocks,
         });
@@ -101,15 +120,83 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * StockInfo'ya fiyat verisi ekle (Mock - Production'da gerçek API'den gelecek)
+ * İş Yatırım API'den BIST verilerini çeker (cache'li)
  */
-function enrichWithPriceData(stock: StockInfo): StockData {
-    // Mock fiyat hesaplama - sembol bazlı tutarlılık
-    const basePrice = getBasePrice(stock.symbol, stock.market);
-    const variation = 0.98 + Math.random() * 0.04; // ±2%
+async function getBistFundamentals(): Promise<StockFundamentals[]> {
+    const now = Date.now();
 
+    // Cache kontrolü
+    if (cachedBistData && cacheTime && (now - cacheTime) < CACHE_DURATION) {
+        return cachedBistData;
+    }
+
+    try {
+        const client = new IsyatirimClient();
+        const data = await client.fetchAllStocks();
+
+        // Cache'le
+        cachedBistData = data;
+        cacheTime = now;
+
+        return data;
+    } catch (error) {
+        console.error('İş Yatırım API hatası, fallback kullanılıyor:', error);
+
+        // Cache varsa eski veriyi kullan
+        if (cachedBistData) {
+            return cachedBistData;
+        }
+
+        // Yoksa boş array dön (fallback mock yerine hata fırlat)
+        throw new Error('BIST verileri alınamadı ve cache yok');
+    }
+}
+
+/**
+ * BIST hisselerini gerçek API verisiyle zenginleştir
+ */
+function enrichBISTStocksWithRealData(fundamentals: StockFundamentals[]): StockData[] {
+    // Hisse kodundan registry'e map oluştur
+    const stockMap = new Map<string, StockInfo>();
+    for (const stock of BIST_STOCKS) {
+        stockMap.set(stock.symbol, stock);
+    }
+
+    // Fundamentals ile birleştir
+    return fundamentals.map(f => {
+        const registryInfo = stockMap.get(f.kod);
+        return {
+            kod: f.kod,
+            ad: f.ad,
+            sektor: f.sektor,
+            piyasa: 'BIST',
+            altPiyasa: registryInfo?.subMarket,
+            doviz: 'TRY',
+            kapanis: f.kapanis,
+            degisim: 0, // İş Yatırım API'de değişim yok, hesaplanabilir
+            fk: f.fk,
+            pddd: f.pddd,
+            fdFavok: f.fdFavok,
+            roe: f.roe,
+            borcOzkaynak: f.borcOzkaynak,
+            piyasaDegeri: f.piyasaDegeri,
+            yabanciOran: f.yabanciOran,
+            hacim: f.piyasaDegeri * 0.1, // Tahmini hacim
+            aktif: registryInfo?.isActive ?? true,
+            dataSource: 'is_yatirim'
+        };
+    });
+}
+
+/**
+ * US hissesi için veri (FMP API kullanılabilir)
+ */
+function enrichUSStockData(stock: StockInfo): StockData {
+    // US hisseleri için mock veri - FMP API entegrasyonu yapılabilir
+    const basePrice = getBasePrice(stock.symbol, stock.market);
+    const variation = 0.98 + Math.random() * 0.04;
     const price = basePrice * variation;
-    const change = (Math.random() - 0.5) * 10; // ±5%
+    const change = (Math.random() - 0.5) * 10;
 
     return {
         kod: stock.symbol,
@@ -123,7 +210,8 @@ function enrichWithPriceData(stock: StockInfo): StockData {
         fk: getMockFK(stock.symbol),
         pddd: getMockPDDD(stock.symbol),
         hacim: Math.floor(1000000 + Math.random() * 50000000),
-        aktif: stock.isActive
+        aktif: stock.isActive,
+        dataSource: 'fallback'
     };
 }
 
@@ -143,7 +231,8 @@ function enrichFundWithData(fund: FundInfo): StockData {
         doviz: 'TRY',
         kapanis: Math.round(price * 1000) / 1000,
         degisim: (Math.random() - 0.5) * 2,
-        aktif: true
+        aktif: true,
+        dataSource: 'fallback'
     };
 }
 
@@ -151,7 +240,6 @@ function enrichFundWithData(fund: FundInfo): StockData {
  * Sembole göre temel fiyat (Tutarlılık için)
  */
 function getBasePrice(symbol: string, market: string): number {
-    // Hash benzeri tutarlı rastgele sayı
     let hash = 0;
     for (let i = 0; i < symbol.length; i++) {
         hash = ((hash << 5) - hash) + symbol.charCodeAt(i);
@@ -159,28 +247,20 @@ function getBasePrice(symbol: string, market: string): number {
     }
     const normalizedHash = Math.abs(hash) / 10000000;
 
-    // Piyasa bazlı aralık
     if (market === 'TEFAS') {
-        // Fonlar 1-100 arası
         return 1 + normalizedHash * 99;
     } else if (market === 'NASDAQ' || market === 'NYSE') {
-        // US hisseleri 50-500 arası
         return 50 + normalizedHash * 450;
     } else {
-        // BIST hisseleri 10-1000 arası
         return 10 + normalizedHash * 990;
     }
 }
 
 /**
- * Mock F/K oranı
+ * Mock F/K oranı (US için fallback)
  */
 function getMockFK(symbol: string): number {
     const fkMap: Record<string, number> = {
-        'THYAO': 3.5, 'GARAN': 3.2, 'ISCTR': 3.8, 'AKBNK': 3.4, 'YKBNK': 3.1,
-        'BIMAS': 18.2, 'MGROS': 14.5, 'SASA': 12.8, 'ASELS': 14.2,
-        'TUPRS': 6.2, 'PETKM': 8.5, 'EREGL': 12.4, 'KRDMD': 8.8,
-        'KOZAA': 6.5, 'KOZAL': 6.3,
         'AAPL': 28, 'MSFT': 32, 'GOOGL': 24, 'AMZN': 45, 'TSLA': 55,
         'NVDA': 65, 'META': 22, 'NFLX': 38
     };
@@ -188,13 +268,8 @@ function getMockFK(symbol: string): number {
 }
 
 /**
- * Mock PD/DD oranı
+ * Mock PD/DD oranı (US için fallback)
  */
 function getMockPDDD(symbol: string): number {
-    const pdddMap: Record<string, number> = {
-        'THYAO': 0.9, 'GARAN': 0.65, 'ISCTR': 0.75, 'AKBNK': 0.70, 'YKBNK': 0.68,
-        'KOZAA': 2.8, 'KOZAL': 2.6,
-        'EREGL': 0.8, 'KRDMD': 0.6, 'TUPRS': 1.4
-    };
-    return pdddMap[symbol] || 0.8 + Math.random() * 2;
+    return 0.8 + Math.random() * 2;
 }

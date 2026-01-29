@@ -1,0 +1,15 @@
+{
+  "name": "@pantheon/intelligence",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./services/index.ts",
+    "./services/sentiment": "./services/sentiment.ts",
+    "./services/diagnostics": "./services/diagnostics.ts"
+  },
+  "dependencies": {
+    "@pantheon/api-clients": "workspace:*",
+    "@pantheon/db": "workspace:*"
+  }
+}

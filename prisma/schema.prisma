@@ -1,5 +1,5 @@
-// Prisma Schema - InvestorAgent
-// SQLite veritabanı için veri modelleri
+// Prisma Schema - Pantheon Trading OS
+// PostgreSQL veritabanı (Supabase için)
 
 generator client {
   provider = "prisma-client-js"
@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

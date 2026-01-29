@@ -7,9 +7,60 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 // JWT Configuration
-const JWT_SECRET = process.env.JWT_SECRET || 'pantheon-secret-key-change-in-production';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+// Security: JWT_SECRET must be set in production, no weak fallback
+const getJwtSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('JWT_SECRET environment variable is required in production');
+    }
+    // Development fallback with warning
+    console.warn('⚠️  JWT_SECRET not set, using development fallback. Set JWT_SECRET in .env!');
+    return 'dev-secret-key-change-in-production-min-32-chars';
+  }
+  if (secret.length < 32) {
+    throw new Error('JWT_SECRET must be at least 32 characters long');
+  }
+  return secret;
+};
+
+// JWT_SECRET - Lazy evaluation to avoid build-time errors
+// Only validated when actually used (runtime), not during build
+const getJwtSecretRuntime = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('JWT_SECRET environment variable is required in production');
+    }
+    // Development fallback with warning
+    if (!globalThis._jwtWarnShown) {
+      console.warn('⚠️  JWT_SECRET not set, using development fallback. Set JWT_SECRET in .env!');
+      globalThis._jwtWarnShown = true;
+    }
+    return 'dev-secret-key-change-in-production-min-32-chars';
+  }
+  if (secret.length < 32) {
+    throw new Error('JWT_SECRET must be at least 32 characters long');
+  }
+  return secret;
+};
+
+// Runtime JWT config (lazy evaluation)
+const getJwtExpiresIn = (): string => {
+  const expiresIn = process.env.JWT_EXPIRES_IN || '15m';
+  const allowedExpirations = ['15m', '1h', '24h', '7d'];
+  if (!allowedExpirations.includes(expiresIn)) {
+    throw new Error(`Invalid JWT_EXPIRES_IN: "${expiresIn}". Allowed: ${allowedExpirations.join(', ')}`);
+  }
+  return expiresIn;
+};
+
 const REFRESH_TOKEN_EXPIRES_IN = '30d';
+
+// Global warning flag (development only)
+declare global {
+  var _jwtWarnShown: boolean | undefined;
+}
 
 // Password Requirements
 export const PASSWORD_MIN_LENGTH = 8;
@@ -54,8 +105,8 @@ export async function comparePasswords(password: string, hash: string): Promise<
  * JWT access token oluştur
  */
 export function signAccessToken(payload: Omit<JwtPayload, 'iat' | 'exp'>): string {
-  return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
+  return jwt.sign(payload, getJwtSecretRuntime(), {
+    expiresIn: getJwtExpiresIn(),
   } as jwt.SignOptions);
 }
 
@@ -63,7 +114,7 @@ export function signAccessToken(payload: Omit<JwtPayload, 'iat' | 'exp'>): strin
  * JWT refresh token oluştur
  */
 export function signRefreshToken(payload: Omit<JwtPayload, 'iat' | 'exp'>): string {
-  return jwt.sign(payload, JWT_SECRET, {
+  return jwt.sign(payload, getJwtSecretRuntime(), {
     expiresIn: REFRESH_TOKEN_EXPIRES_IN,
   } as jwt.SignOptions);
 }
@@ -90,7 +141,7 @@ export function signTokens(payload: Omit<JwtPayload, 'iat' | 'exp'>): AuthTokens
  */
 export function verifyToken(token: string): JwtPayload | null {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    const decoded = jwt.verify(token, getJwtSecretRuntime()) as JwtPayload;
     return decoded;
   } catch (error) {
     return null;
