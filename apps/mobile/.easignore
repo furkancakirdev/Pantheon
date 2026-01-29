@@ -1,5 +1,9 @@
-# EAS Build - Exclude workspace files
+# Exclude parent workspace configuration
+../pnpm-workspace.yaml
+../package.json
+../pnpm-lock.yaml
+../.npmrc
+../turbo.json
+../tsconfig.json
 pnpm-workspace.yaml
 pnpm-lock.yaml
-../../pnpm-workspace.yaml
-../../pnpm-lock.yaml

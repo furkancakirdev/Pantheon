@@ -1,0 +1,9 @@
+# EAS Build - Exclude workspace and monorepo files
+pnpm-workspace.yaml
+pnpm-lock.yaml
+turbo.json
+apps/web
+packages
+docs
+.vercel
+.turbo
