@@ -38,7 +38,7 @@ lerna-debug.log*
 *~
 
 # Build artifacts
-dist
+# dist - REMOVED: packages/db/dist is needed for runtime
 build
 *.tgz
 
