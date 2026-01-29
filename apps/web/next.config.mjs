@@ -8,10 +8,10 @@ const nextConfig = {
   output: 'standalone',
 
   // Transpile workspace packages (including @pantheon/db for proper module resolution)
-  transpilePackages: ['@pantheon/analysis', '@pantheon/api-clients', '@pantheon/db', '@pantheon/sentiment'],
+  transpilePackages: ['@pantheon/analysis', '@pantheon/api-clients', '@pantheon/db', '@pantheon/sentiment', '@prisma/client'],
 
   // External packages for server components - don't bundle these
-  serverExternalPackages: ['@prisma/client'],
+  // serverExternalPackages: ['@prisma/client'], // Removed to ensure proper bundling
 
   // Turbopack config (use Webpack for monorepo compatibility)
   turbopack: {},
