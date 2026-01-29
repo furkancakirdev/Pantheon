@@ -5,7 +5,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig = {
   // Output mode for deployment
-  output: 'standalone',
+  // output: 'standalone', // Disabled for Vercel compatibility
 
   // Transpile workspace packages (including @pantheon/db for proper module resolution)
   transpilePackages: ['@pantheon/analysis', '@pantheon/api-clients', '@pantheon/db', '@pantheon/sentiment', '@prisma/client'],
