@@ -1,4 +1,6 @@
 {
   "framework": "nextjs",
-  "buildCommand": "cd ../.. && npx turbo run build --filter=web"
+  "buildCommand": "cd ../.. && npx turbo run build --filter=web",
+  "outputDirectory": ".next",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./"
 }
