@@ -2,14 +2,33 @@
   "name": "@pantheon/db",
   "version": "1.0.0",
   "type": "module",
-  "main": "./index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./index.ts",
-    "./redis": "./redis.ts",
-    "./stock-registry": "./stock-registry.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./redis": {
+      "types": "./dist/redis.d.ts",
+      "import": "./dist/redis.js"
+    },
+    "./stock-registry": {
+      "types": "./dist/stock-registry.d.ts",
+      "import": "./dist/stock-registry.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "db:generate": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.19.2",
     "ioredis": "^5.9.2"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.2",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
   }
 }

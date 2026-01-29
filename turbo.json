@@ -19,6 +19,9 @@
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
+    "db:generate": {
+      "outputs": ["node_modules/.prisma/client/**"]
+    },
     "dev": {
       "cache": false,
       "persistent": true
